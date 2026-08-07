@@ -5,19 +5,18 @@
 </p>
 
 <p align="center">
-  Capture website leads • Generate AI-powered responses • Deliver emails in seconds
+  Capture leads • Generate AI responses • Reply instantly • Never miss a customer
 </p>
 
 <p align="center">
 
-![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
+![Next.js](https://img.shields.io/badge/Next.js-000000?logo=nextdotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?logo=supabase&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-38BDF8?logo=tailwind-css&logoColor=white)
-![Claude AI](https://img.shields.io/badge/Claude-AI-orange)
-![Resend](https://img.shields.io/badge/Resend-Email-black)
-![Vercel](https://img.shields.io/badge/Vercel-Deployed-black?logo=vercel)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-06B6D4?logo=tailwindcss&logoColor=white)
+![Claude](https://img.shields.io/badge/Claude-AI-orange)
+![Vercel](https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white)
 
 </p>
 
@@ -25,88 +24,63 @@
 
 ## 📖 Overview
 
-LeadFast AI is a real-world SaaS application designed to help home service contractors respond instantly to new customer inquiries. The platform captures website contact form submissions, generates personalized AI-powered responses, delivers them via email, and logs every interaction in a secure dashboard.
-
-Designed for speed, reliability, and scalability, LeadFast AI helps businesses reduce response times, improve customer engagement, and prevent lost sales opportunities through intelligent automation. The application targets contractors in industries such as HVAC, plumbing, roofing, and other home services where fast response times directly impact customer conversion. 0
+LeadFast AI is a real-world SaaS platform that helps home service contractors respond to customer inquiries within seconds. It captures website form submissions, generates personalized AI-powered replies, sends emails automatically, and stores every interaction in a secure dashboard. 0
 
 ---
 
 ## ✨ Features
 
-- ⚡ Instant lead capture from website contact forms
-- 🤖 AI-generated personalized email responses
+- ⚡ Instant lead capture
+- 🤖 AI-generated responses
 - 📧 Automated email delivery
-- 🔐 Secure contractor authentication
 - 📊 Lead management dashboard
-- 🎯 Business-specific AI customization
-- 💾 Real-time database storage
+- 🔐 Secure authentication
 - 🛡️ Row-Level Security (RLS)
-- 📱 Responsive user interface
-- ☁️ Serverless deployment on Vercel
+- ☁️ Serverless deployment
+- 📱 Responsive interface
 
 ---
 
----
+## 🛠 Tech Stack
 
-## 🛠️ Technology Stack
-
-| Category | Technology |
-|----------|------------|
-| **Frontend** | Next.js, TypeScript, Tailwind CSS |
+| Category | Technologies |
+|----------|--------------|
+| **Frontend** | Next.js • TypeScript • Tailwind CSS |
 | **Backend** | Next.js API Routes |
-| **Database** | PostgreSQL (Supabase) |
+| **Database** | Supabase • PostgreSQL |
 | **Authentication** | Supabase Auth |
-| **Artificial Intelligence** | Anthropic Claude API |
-| **Email Service** | Resend |
+| **AI** | Anthropic Claude API |
+| **Email** | Resend |
 | **Deployment** | Vercel |
 | **Version Control** | Git & GitHub |
 
 ---
 
-## 🏗️ System Architecture
+## 🏗 Architecture
 
 ```text
-                  Website Contact Form
-                          │
-                          ▼
-            JavaScript Embed Script
-                          │
-                          ▼
-               Next.js API Route
-                          │
-                          ▼
-             Anthropic Claude API
-                          │
-                          ▼
-          AI-Generated Personalized Reply
-                          │
-                          ▼
-                   Resend Email API
-                          │
-                          ▼
-                 Customer Receives Email
-
-                          │
-                          ▼
-          Supabase PostgreSQL Database
-                          │
-                          ▼
-           Contractor Dashboard & Logs
+Customer
+    │
+    ▼
+Website Contact Form
+    │
+    ▼
+ Embed Script
+    │
+    ▼
+ Next.js API
+    │
+    ├────────────► Supabase Database
+    │                     │
+    ▼                     ▼
+Claude AI          Dashboard
+    │
+    ▼
+Resend API
+    │
+    ▼
+Customer Reply
 ```
-
----
-
-## ⚙️ How It Works
-
-1. A visitor submits a contact form on the contractor's website.
-2. The embedded JavaScript intercepts the submission and securely sends the lead information to the backend.
-3. A Next.js API Route processes the request.
-4. Anthropic Claude AI generates a personalized response based on the customer's inquiry and the contractor's business information.
-5. The generated response is delivered to the customer through the Resend Email API.
-6. The lead information, AI response, and delivery status are stored securely in Supabase.
-7. Contractors can view and manage all captured leads through the LeadFast AI dashboard.
-
-The complete workflow is designed to respond to customer inquiries within **15–30 seconds**, helping contractors engage potential customers before they contact competitors. 0
 
 ---
 
@@ -120,10 +94,6 @@ LeadFast_AI/
 │   ├── components/
 │   ├── lib/
 │   ├── public/
-│   ├── middleware.ts
-│   ├── package.json
-│   ├── next.config.ts
-│   ├── tsconfig.json
 │   └── ...
 │
 ├── Supabase/
@@ -135,42 +105,34 @@ LeadFast_AI/
 
 ---
 
-## 🗄️ Database
+## ⚙️ How It Works
 
-LeadFast AI uses **Supabase PostgreSQL** to securely manage business and customer data.
-
-### Core Tables
-
-- 🏢 **Businesses** – Stores contractor account information and subscription details.
-- 👤 **Leads** – Stores incoming customer inquiries captured from website forms.
-- 🤖 **AI Responses** – Stores AI-generated responses and delivery status.
-- ⚙️ **Settings** – Stores business-specific preferences such as reply tone and notification settings.
-
-To protect customer data, **Row-Level Security (RLS)** is implemented across all database tables, ensuring contractors can only access records associated with their own business. 1
+1. Customer submits a website form.
+2. Lead is captured by the embed script.
+3. Next.js processes the request.
+4. Claude AI generates a personalized reply.
+5. Resend sends the email.
+6. Supabase stores the lead and response.
+7. Contractors manage everything from the dashboard. 1
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
-### Clone the Repository
+### Clone the repository
 
 ```bash
 git clone https://github.com/adoka254/LeadFast_AI.git
-```
-
-```bash
 cd LeadFast_AI/NextJs
 ```
 
-### Install Dependencies
+### Install dependencies
 
 ```bash
 npm install
 ```
 
-### Configure Environment Variables
-
-Create a `.env.local` file inside the **NextJs** directory.
+### Configure environment variables
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
@@ -184,106 +146,66 @@ ANTHROPIC_API_KEY=
 RESEND_API_KEY=
 ```
 
-### Start the Development Server
+### Run locally
 
 ```bash
 npm run dev
-```
-
-Visit:
-
-```
-http://localhost:3000
 ```
 
 ---
 
 ## 🔒 Security
 
-LeadFast AI follows modern security best practices, including:
-
-- 🔐 Supabase Authentication
-- 🛡️ Row-Level Security (RLS)
-- 🔑 Protected environment variables
-- ⚡ Secure server-side API Routes
-- 🏢 Business-level data isolation
-- 🗄️ PostgreSQL security policies
+- Supabase Authentication
+- Row-Level Security (RLS)
+- Secure API Routes
+- Protected Environment Variables
 
 ---
 
-## 🌐 Deployment
+## 🌍 Deployment
 
-LeadFast AI is deployed using **Vercel** with a fully serverless architecture.
-
-Production services include:
-
-- ▲ Next.js Serverless Functions
-- 🗄️ Supabase PostgreSQL
-- 🤖 Anthropic Claude API
-- 📧 Resend Email API
-
-This architecture delivers a scalable, reliable, and cost-effective solution capable of handling real-time lead processing while minimizing infrastructure overhead. 2
+| Service | Purpose |
+|---------|---------|
+| ▲ Vercel | Hosting |
+| 🗄 Supabase | Database & Authentication |
+| 🤖 Claude API | AI Responses |
+| 📧 Resend | Email Delivery |
 
 ---
 
-## 🔮 Future Enhancements
+## 👥 Team
 
-- 📱 SMS notifications for contractors
-- 🔗 CRM integrations
-- 📊 Advanced analytics dashboard
-- 🏢 Multi-location business support
-- 🎯 AI prompt customization
-- 📲 Mobile application
-- 📈 Enhanced reporting and customer insights
-
----
-
-## 👥 Contributors
-
-LeadFast AI was collaboratively designed and developed by:
-
-| Team Members |
-|--------------|
-| Benoline Mildren |
-| Shamah Kibet |
-| Samuel Muriithi |
-| Steven Were |
-| Valentine Ombunga |
-| Bacil Otieno |
-| Frank Nyaundi |
-| Dorcas Adoka |
+| | |
+|---|---|
+| **Benoline Mildren** | **Shamah Kibet** |
+| **Samuel Muriithi** | **Steve Were** |
+| **Valentine Ombunga** | **Bacil Otieno** |
+| **Frank Nyaundi** | **Dorcas Adoka** |
 
 ---
 
 ## 📚 Documentation
 
-The project is supported by comprehensive technical documentation covering:
+Project documentation includes:
 
-- Product overview
-- System architecture
-- Technology stack
-- Database schema
-- AI prompt design
-- Pricing model
-- Go-to-market strategy
-- Risk assessment and mitigation
+- System Architecture
+- Database Design
+- AI Workflow
+- Deployment Strategy
+- Product Roadmap
+- Risk Assessment
 
-These documents guided the development of LeadFast AI from concept through implementation. 3
-
----
-
-## 💡 About the Project
-
-LeadFast AI is a real-world software solution built to address one of the biggest challenges faced by home service contractors—responding quickly to customer inquiries.
-
-By combining Artificial Intelligence, serverless computing, and modern web technologies, the platform enables businesses to automate lead engagement, improve response times, and increase customer conversion through intelligent automation.
-
-The project demonstrates the practical application of AI within a Software-as-a-Service (SaaS) platform, delivering measurable business value through speed, automation, and reliability. 4
+See the full documentation for implementation details and technical decisions. 2
 
 ---
 
 ## 📄 License
 
-This repository showcases the architecture, implementation, and collaborative development of **LeadFast AI**, a real-world SaaS application built to automate lead engagement for home service businesses.
+This repository showcases **LeadFast AI**, a real-world SaaS platform built to automate lead engagement and improve customer response times for home service contractors.
 
-© 2026 LeadFast AI Team. All rights reserved.
+---
+
+<p align="center">
+Built with ❤️ using Next.js, Supabase, Claude AI & Vercel.
+</p>
