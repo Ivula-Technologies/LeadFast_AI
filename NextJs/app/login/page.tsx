@@ -15,7 +15,7 @@ type Step = 'role_select' | 'auth_form';
 export default function LoginPage() {
   const [welcomeTitle, welcomeDone] = useTypewriter('Welcome to LeadFast AI', 60, 200);
   const [contractorTitle, contractorDone] = useTypewriter('Contractor Login', 60, 200);
-  const [signUpTitle, signUpDone] = useTypewriter('Contractor Sign‑Up', 60, 200);
+  const [signUpTitle, signUpDone] = useTypewriter('Contractor Sign Up', 60, 200);
   const [step, setStep] = useState<Step>('role_select');
   const [role, setRole] = useState<'contractor' | 'client' | null>(null);
   
@@ -70,7 +70,7 @@ export default function LoginPage() {
           throw new Error('An account with this email already exists. Please sign in instead.');
         }
         const userId = signUpData.user?.id;
-        if (!userId) throw new Error('User ID not returned after sign‑up.');
+        if (!userId) throw new Error('User ID not returned after sign up.');
 
         const res = await fetch('/api/register', {
           method: 'POST',
