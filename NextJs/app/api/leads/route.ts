@@ -41,6 +41,7 @@ async function sendConfirmationEmail(name: string, email: string, message?: stri
   try {
     await resend.emails.send({
       from: "LeadFast <onboarding@resend.dev>",
+
       to: email,
       subject: "Confirmation: We received your request",
       text: emailContent
@@ -63,7 +64,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const { searchParams } = new URL(request.url);
+  const { searchParams} = new URL(request.url);
   const businessId = searchParams.get('business_id') || searchParams.get('businessId');
 
   let query = supabase
