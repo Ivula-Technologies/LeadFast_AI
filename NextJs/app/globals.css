@@ -72,8 +72,11 @@ h1::after, h2::after, h3::after, h4::after, h5::after, h6::after, .shiny-gold-he
   );
   background-size: 200% 100%;
   animation: purpleTraverse 3.5s linear infinite;
-  box-shadow: 0 1px 6px rgba(58, 7, 100, 0.35);
 }
+
+/* Utility: suppress the heading underline on specific elements */
+h1.no-underline::after, h2.no-underline::after, h3.no-underline::after { display: none !important; }
+
 
 @keyframes purpleTraverse {
   0% {
@@ -152,6 +155,10 @@ main { min-height: 100vh; }
 
 button, .btn { cursor: pointer; border: none; border-radius: 999px; padding: 10px 16px; transition: transform 0.2s ease, opacity 0.2s ease; }
 button:hover, .btn:hover { transform: translateY(-1px); }
+
+/* Portal Login button — always rectangular, never pill-shaped */
+a.shiny-green-btn { border-radius: 8px !important; text-decoration: none !important; }
+
 
 input, textarea, select { width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--border); background: #ffffff; color: var(--text); }
 input:focus, select:focus { outline: 2px solid rgba(2, 132, 199, 0.25); border-color: var(--accent-2); }

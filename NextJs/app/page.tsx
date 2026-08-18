@@ -232,7 +232,7 @@ export default function LandingPage() {
 
           {/* Right Header Navigation & Hamburger Trigger */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Link href="/login" className="shiny-green-btn" style={{ padding: '9px 20px', fontSize: '0.9rem' }}>
+            <Link href="/login" className="shiny-green-btn" style={{ padding: '9px 20px', fontSize: '0.9rem', borderRadius: '8px' }}>
               Portal Login →
             </Link>
 
@@ -247,12 +247,10 @@ export default function LandingPage() {
                 color: menuOpen ? '#ffffff' : '#0284c7',
                 border: '1px solid rgba(2, 132, 199, 0.3)',
                 borderRadius: '12px',
-                padding: '9px 14px',
+                padding: '10px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
-                fontWeight: '700',
-                fontSize: '0.92rem',
+                justifyContent: 'center',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
               }}
@@ -271,7 +269,7 @@ export default function LandingPage() {
                   </>
                 )}
               </svg>
-              <span>Menu</span>
+
             </button>
           </div>
         </div>
@@ -327,9 +325,10 @@ export default function LandingPage() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  fontSize: '1.1rem',
+                  fontSize: '1rem',
                   fontWeight: '700',
                   color: '#475569',
+                  lineHeight: 1,
                 }}
               >
                 ✕
@@ -525,7 +524,11 @@ export default function LandingPage() {
                   borderRadius: '50%',
                   width: '36px',
                   height: '36px',
-                  fontSize: '1.2rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1rem',
+                  lineHeight: 1,
                   fontWeight: '700',
                   cursor: 'pointer',
                 }}
@@ -617,7 +620,11 @@ export default function LandingPage() {
                   borderRadius: '50%',
                   width: '36px',
                   height: '36px',
-                  fontSize: '1.2rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1rem',
+                  lineHeight: 1,
                   fontWeight: '700',
                   cursor: 'pointer',
                 }}
@@ -720,12 +727,13 @@ export default function LandingPage() {
                       fontFamily: 'Poppins, sans-serif',
                     }}
                   >
-                    ⚡ Zero Client Drop-off Guarantee
+                    Zero Client Drop-off Guarantee
                   </span>
                 </div>
 
                 {/* Main Heading: Are you tired of losing clients due to busy schedules? */}
                 <h1
+                  className="no-underline"
                   style={{
                     fontSize: 'clamp(2.2rem, 4.2vw, 3.4rem)',
                     fontWeight: '900',
@@ -740,6 +748,7 @@ export default function LandingPage() {
 
                 {/* Subheading: LeadFast AI offers a solution to you... */}
                 <h2
+                  className="no-underline"
                   style={{
                     fontSize: 'clamp(1.15rem, 2vw, 1.4rem)',
                     fontWeight: '600',
