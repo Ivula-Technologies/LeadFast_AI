@@ -14,6 +14,8 @@ Verify a sending domain (for example `leadfast.ivulatechnologies.com`) and set `
 
 ## 3. Stripe (once, in test mode first)
 
+Quickest way: from `NextJs/`, run `STRIPE_SECRET_KEY=sk_test_... node scripts/stripe-setup.mjs`. It creates the product, both prices and the webhook (re-running it is safe), and prints the env vars to paste into cPanel. Live keys are refused unless you pass `--live`. To do it by hand instead:
+
 1. Create a product **LeadFast AI** with two monthly prices: **Starter $49** and **Pro $99**. Put their IDs in `STRIPE_PRICE_STARTER` and `STRIPE_PRICE_PRO`.
 2. Add a webhook endpoint `https://leadfast.ivulatechnologies.com/api/billing/webhook` listening to:
    - `checkout.session.completed`
