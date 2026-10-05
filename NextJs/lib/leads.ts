@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import Anthropic from "@anthropic-ai/sdk";
 import { Resend } from "resend";
 import { supabase } from "@/lib/supabase";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimit, checkRateLimitKey } from "@/lib/rate-limit";
 import { getEntitlement } from "@/lib/billing";
 
 // Public lead intake shared by the embed script (/api/leads) and the hosted
@@ -107,6 +107,17 @@ export async function handleLeadSubmission(request: Request): Promise<Response> 
     return json({ success: false, message: "Unknown business ID." }, 404);
   }
 
+  // A per-business ceiling that doesn't depend on the caller's IP, so spoofed
+  // addresses can't flood one contractor with leads and emails.
+  const businessLimit = checkRateLimitKey(`business:${business.id}`, { windowMs: 3_600_000, maxRequests: 60 });
+  if (!businessLimit.allowed) {
+    return json(
+      { success: false, message: "This business is receiving too many requests. Please try again later." },
+      429,
+      { "Retry-After": String(businessLimit.retryAfter) }
+    );
+  }
+
   const { data: inserted, error } = await supabase
     .from("leads")
     .insert({
@@ -146,7 +157,13 @@ async function respondToLead(business: Business, lead: Lead) {
   let autoReplied = false;
 
   // Phone-only leads can't get an email reply; the contractor still hears about them.
-  if (entitlement?.canAutoReply && lead.email) {
+  // The reservation re-checks the cap under a row lock, so concurrent leads
+  // can't push a business past its plan's monthly replies.
+  const reserved =
+    Boolean(entitlement?.canAutoReply && lead.email) &&
+    (await reserveAutoReply(business.id, lead.id, entitlement?.monthlyReplies ?? null));
+
+  if (reserved) {
     const generated = await generateReply(business, settings, lead);
     const signature = settings?.custom_signature?.trim() || business.business_name;
     const body = `${generated.text.trim()}\n\n${signature}`;
@@ -169,12 +186,27 @@ async function respondToLead(business: Business, lead: Lead) {
       delivery_status: delivery,
     });
 
-    if (autoReplied) {
-      await supabase.from("leads").update({ auto_replied: true }).eq("id", lead.id);
+    if (!autoReplied) {
+      // Give the reply back to the monthly allowance.
+      await supabase.from("leads").update({ auto_replied: false }).eq("id", lead.id);
     }
   }
 
   await notifyContractor(business, lead, autoReplied, entitlement?.state ?? null);
+}
+
+async function reserveAutoReply(businessId: string, leadId: string, cap: number | null) {
+  if (!supabase) return false;
+  const { data, error } = await supabase.rpc("reserve_auto_reply", {
+    p_business_id: businessId,
+    p_lead_id: leadId,
+    p_cap: cap,
+  });
+  if (error) {
+    console.error("reserve_auto_reply failed:", error);
+    return false;
+  }
+  return data === true;
 }
 
 function replyPrompt(business: Business, settings: Settings | null) {

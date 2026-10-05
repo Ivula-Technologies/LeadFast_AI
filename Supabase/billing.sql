@@ -66,3 +66,49 @@ DROP TRIGGER IF EXISTS businesses_block_delete_when_subscribed ON businesses;
 CREATE TRIGGER businesses_block_delete_when_subscribed
 BEFORE DELETE ON businesses
 FOR EACH ROW EXECUTE FUNCTION prevent_delete_with_active_subscription();
+
+-- Atomically claims one automatic reply for a lead against the monthly cap.
+-- Locks the business row so concurrent leads can't all pass the same count.
+-- p_cap NULL means unlimited. Returns true when the lead may be auto-replied.
+CREATE OR REPLACE FUNCTION reserve_auto_reply(p_business_id UUID, p_lead_id UUID, p_cap INTEGER)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    used INTEGER;
+BEGIN
+    PERFORM 1 FROM businesses WHERE id = p_business_id FOR UPDATE;
+
+    IF p_cap IS NOT NULL THEN
+        SELECT count(*) INTO used
+        FROM leads
+        WHERE business_id = p_business_id
+        AND auto_replied
+        AND created_at >= date_trunc('month', now() AT TIME ZONE 'utc') AT TIME ZONE 'utc';
+
+        IF used >= p_cap THEN
+            RETURN FALSE;
+        END IF;
+    END IF;
+
+    UPDATE leads SET auto_replied = TRUE
+    WHERE id = p_lead_id AND business_id = p_business_id AND NOT auto_replied;
+    RETURN FOUND;
+END;
+$$;
+
+-- Server (service role) only.
+REVOKE EXECUTE ON FUNCTION reserve_auto_reply(UUID, UUID, INTEGER) FROM PUBLIC;
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+        EXECUTE 'REVOKE EXECUTE ON FUNCTION reserve_auto_reply(UUID, UUID, INTEGER) FROM anon';
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+        EXECUTE 'REVOKE EXECUTE ON FUNCTION reserve_auto_reply(UUID, UUID, INTEGER) FROM authenticated';
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+        EXECUTE 'GRANT EXECUTE ON FUNCTION reserve_auto_reply(UUID, UUID, INTEGER) TO service_role';
+    END IF;
+END;
+$$;

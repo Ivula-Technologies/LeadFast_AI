@@ -22,24 +22,33 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid signature." }, { status: 400 });
   }
 
+  // Stripe can deliver events late, twice, or out of order, so the payload is
+  // only used to find the subscription; its current state is read from Stripe.
+  let subscriptionId: string | null = null;
   switch (event.type) {
     case "customer.subscription.created":
     case "customer.subscription.updated":
-    case "customer.subscription.deleted": {
-      await syncSubscription(event.data.object);
+    case "customer.subscription.deleted":
+      subscriptionId = event.data.object.id;
       break;
-    }
     case "checkout.session.completed": {
       const session = event.data.object;
-      if (session.mode === "subscription" && typeof session.subscription === "string") {
-        await syncSubscription(await stripe.subscriptions.retrieve(session.subscription));
+      if (session.mode === "subscription") {
+        subscriptionId =
+          typeof session.subscription === "string" ? session.subscription : session.subscription?.id ?? null;
       }
       break;
     }
   }
 
+  if (subscriptionId) {
+    await syncSubscription(await stripe.subscriptions.retrieve(subscriptionId));
+  }
+
   return Response.json({ received: true });
 }
+
+const LIVE_STATUSES = new Set(["active", "trialing", "past_due"]);
 
 async function syncSubscription(subscription: Stripe.Subscription) {
   if (!supabase) return;
@@ -62,6 +71,22 @@ async function syncSubscription(subscription: Stripe.Subscription) {
   }
   if (!businessId) {
     console.error("Stripe subscription without a known business:", subscription.id);
+    return;
+  }
+
+  // An ended subscription must not overwrite a newer live one for the same
+  // business (for example after a cancel and re-subscribe).
+  const { data: current } = await supabase
+    .from("billing")
+    .select("stripe_subscription_id, subscription_status")
+    .eq("business_id", businessId)
+    .maybeSingle();
+  if (
+    current?.stripe_subscription_id &&
+    current.stripe_subscription_id !== subscription.id &&
+    LIVE_STATUSES.has(current.subscription_status ?? "") &&
+    !LIVE_STATUSES.has(subscription.status)
+  ) {
     return;
   }
 
