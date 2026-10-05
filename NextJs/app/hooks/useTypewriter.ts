@@ -21,14 +21,12 @@ export function useTypewriter(
   const [isDone, setIsDone] = useState(false);
 
   useEffect(() => {
-    setDisplayed('');
-    setIsDone(false);
-
     let i = 0;
-    let startTimer: ReturnType<typeof setTimeout>;
     let interval: ReturnType<typeof setInterval>;
 
-    startTimer = setTimeout(() => {
+    const startTimer = setTimeout(() => {
+      setDisplayed('');
+      setIsDone(false);
       interval = setInterval(() => {
         i += 1;
         setDisplayed(text.slice(0, i));

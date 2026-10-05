@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTypewriter } from '../hooks/useTypewriter';
 import { useRouter } from 'next/navigation';
 import LogoutButton from '../components/LogoutButton';
+import BillingPanel from '../components/BillingPanel';
 import { supabaseAnon as supabase, hasSupabaseConfig } from '@/lib/supabase';
 
 interface Business {
@@ -45,12 +46,11 @@ export default function ContractorDashboard() {
     async function loadContractorData() {
       if (typeof window === 'undefined') return;
 
-      const storedUser = window.localStorage.getItem('hvap-user');
       const storedBusiness = window.localStorage.getItem('hvap-business');
-      const storedSession = window.localStorage.getItem('hvap-session');
       const onboardedFlag = window.localStorage.getItem('hvap-onboarded');
 
-      if (!storedSession && !storedUser) {
+      const { data: sessionData } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+      if (!sessionData.session) {
         router.replace('/login');
         return;
       }
@@ -166,7 +166,7 @@ export default function ContractorDashboard() {
         </div>
 
         {/* Business Summary KPI */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="panel card kpi p-5 rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50/50 border border-slate-200">
             <div className="label text-slate-600 text-xs sm:text-sm font-medium">Registered Trade</div>
             <div className="value text-lg sm:text-xl font-bold text-slate-900 mt-1 capitalize">
@@ -180,14 +180,9 @@ export default function ContractorDashboard() {
               {loading ? '—' : leads.length}
             </div>
           </div>
-
-          <div className="panel card kpi p-5 rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50/50 border border-slate-200 col-span-1 sm:col-span-2 lg:col-span-1">
-            <div className="label text-slate-600 text-xs sm:text-sm font-medium">Active Subscription</div>
-            <div className="value text-lg sm:text-xl font-bold text-slate-900 mt-1 capitalize">
-              {business?.plan || 'Standard'}
-            </div>
-          </div>
         </div>
+
+        {business?.id && <BillingPanel businessId={business.id} />}
 
         {/* Embed Widget Code Snippet Section */}
         <div className="panel card p-5 sm:p-6 rounded-2xl bg-white/95 border border-slate-200 shadow-lg space-y-4">
@@ -458,7 +453,7 @@ export default function ContractorDashboard() {
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs sm:text-sm text-slate-700">
                   {platformTab === 'html' && (
                     <ol className="list-decimal list-inside space-y-2 text-slate-700">
-                      <li>Open your website's main HTML file (e.g. <code className="text-sky-800 font-mono">index.html</code>).</li>
+                      <li>Open your website&apos;s main HTML file (e.g. <code className="text-sky-800 font-mono">index.html</code>).</li>
                       <li>Scroll to the bottom of the file right before the closing <code className="text-sky-800 font-mono">&lt;/body&gt;</code> tag.</li>
                       <li>Paste the copied <code className="text-sky-800 font-mono">&lt;script&gt;</code> snippet and save the file.</li>
                     </ol>
@@ -467,7 +462,7 @@ export default function ContractorDashboard() {
                   {platformTab === 'wordpress' && (
                     <ol className="list-decimal list-inside space-y-2 text-slate-700">
                       <li>Log into your WordPress Dashboard.</li>
-                      <li>Go to <strong>Plugins → Add New</strong> and search for <em>"Header and Footer Scripts"</em> or <em>"WPCode"</em>.</li>
+                      <li>Go to <strong>Plugins → Add New</strong> and search for <em>&quot;Header and Footer Scripts&quot;</em> or <em>&quot;WPCode&quot;</em>.</li>
                       <li>Paste the script snippet into the <strong>Footer Scripts</strong> box and click <strong>Save Changes</strong>.</li>
                     </ol>
                   )}
@@ -491,7 +486,7 @@ export default function ContractorDashboard() {
                     <span>3️⃣</span> Test & Verify Lead Capture
                   </h4>
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                    You're all set! Once the snippet is installed on your site, any quote request or form submission made by a client will be processed instantly by LeadFast AI.
+                    You&apos;re all set! Once the snippet is installed on your site, any quote request or form submission made by a client will be processed instantly by LeadFast AI.
                   </p>
                 </div>
 

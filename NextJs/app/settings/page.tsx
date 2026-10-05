@@ -5,6 +5,7 @@ import { useTypewriter } from '../hooks/useTypewriter';
 import { useRouter } from 'next/navigation';
 import LogoutButton from '../components/LogoutButton';
 import { supabaseAnon as supabase, hasSupabaseConfig } from '@/lib/supabase';
+import { authHeaders } from '@/lib/session';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -35,11 +36,10 @@ export default function SettingsPage() {
     async function load() {
       if (typeof window === 'undefined') return;
 
-      const storedUser = window.localStorage.getItem('hvap-user');
-      const storedSession = window.localStorage.getItem('hvap-session');
       const storedBusiness = window.localStorage.getItem('hvap-business');
 
-      if (!storedSession && !storedUser) {
+      const { data: sessionData } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+      if (!sessionData.session) {
         router.replace('/login');
         return;
       }
@@ -114,28 +114,14 @@ export default function SettingsPage() {
     event.preventDefault();
     if (typeof window === 'undefined') return;
 
-    const storedUser = window.localStorage.getItem('hvap-user');
-    let userId: string | null = null;
-    try {
-      userId = storedUser ? JSON.parse(storedUser).id : null;
-    } catch (e) {
-      console.error('Error parsing stored user:', e);
-    }
-
-    if (!userId) {
-      setCreateMessage('Failed to create business: could not identify your account.');
-      return;
-    }
-
     setCreatingBiz(true);
     setCreateMessage('');
 
     try {
       const res = await fetch('/api/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
         body: JSON.stringify({
-          userId,
           business_name: newBizName,
           trade: newBizTrade,
           contact_email: newBizEmail,
@@ -149,8 +135,8 @@ export default function SettingsPage() {
       // the same way login already does after sign-in.
       window.localStorage.setItem('hvap-business', JSON.stringify({ id: result.id, name: result.business_name }));
       router.replace('/dashboard');
-    } catch (err: any) {
-      setCreateMessage(`Failed to create business: ${err.message}`);
+    } catch (err) {
+      setCreateMessage(`Failed to create business: ${err instanceof Error ? err.message : 'unknown error'}`);
       setCreatingBiz(false);
     }
   }

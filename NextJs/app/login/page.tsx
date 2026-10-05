@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTypewriter } from '../hooks/useTypewriter';
 import { useRouter } from 'next/navigation';
 import { supabaseAnon as supabase, hasSupabaseConfig } from '@/lib/supabase';
+import type { Session, User } from '@supabase/supabase-js';
 
 interface Business {
   id: string;
@@ -27,7 +28,6 @@ export default function LoginPage() {
   const [businessTrade, setBusinessTrade] = useState('');
   const [businessContactEmail, setBusinessContactEmail] = useState('');
   const [businessContactPhone, setBusinessContactPhone] = useState('');
-  const [businessPlan, setBusinessPlan] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -36,14 +36,27 @@ export default function LoginPage() {
   const [showBizSelect, setShowBizSelect] = useState(false);
 
   useEffect(() => {
-    const session = window.localStorage.getItem('hvap-session');
-    const logoutMessage = window.localStorage.getItem('hvap-logout-message');
-    if (logoutMessage) {
-      setMessage(logoutMessage);
-      window.localStorage.removeItem('hvap-logout-message');
-    } else if (session) {
-      setMessage('You are signing in as a contractor.');
+    let cancelled = false;
+    async function resume() {
+      const logoutMessage = window.localStorage.getItem('hvap-logout-message');
+      if (logoutMessage) {
+        window.localStorage.removeItem('hvap-logout-message');
+        if (!cancelled) setMessage(logoutMessage);
+        return;
+      }
+      // Returning from a magic link or email confirmation: Supabase already
+      // has a session, so finish signing in without asking again.
+      if (!supabase) return;
+      const { data } = await supabase.auth.getSession();
+      if (!cancelled && data.session) {
+        await finishSignIn(data.session, data.session.user).catch((err) =>
+          setMessage(err instanceof Error ? err.message : 'Unable to sign in.')
+        );
+      }
     }
+    resume();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handleSelectRole(selectedRole: 'contractor' | 'client') {
@@ -55,6 +68,47 @@ export default function LoginPage() {
     }
   }
 
+  async function createBusiness(session: Session, details: Record<string, string>) {
+    const res = await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify(details),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.message || 'Failed to create business.');
+    return { id: result.id as string, business_name: result.business_name as string };
+  }
+
+  async function finishSignIn(session: Session, user: User) {
+    window.localStorage.setItem('hvap-session', JSON.stringify(session));
+    window.localStorage.setItem('hvap-user', JSON.stringify(user));
+
+    const bizRes = await fetch('/api/my-businesses', {
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    });
+    const bizData = await bizRes.json();
+    let bizList: Business[] = Array.isArray(bizData) ? bizData : [];
+
+    // First sign-in after sign-up: create the business saved at sign-up.
+    const pending = user.user_metadata?.pending_business;
+    if (bizList.length === 0 && pending?.business_name) {
+      bizList = [await createBusiness(session, pending)];
+      await supabase?.auth.updateUser({ data: { pending_business: null } });
+    }
+
+    setBusinesses(bizList);
+
+    if (bizList.length <= 1) {
+      if (bizList[0]) {
+        window.localStorage.setItem('hvap-business', JSON.stringify({ id: bizList[0].id, name: bizList[0].business_name }));
+      }
+      router.replace('/dashboard');
+      return;
+    }
+    setSelectedBizId(bizList[0].id);
+    setShowBizSelect(true);
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
@@ -64,45 +118,41 @@ export default function LoginPage() {
       if (!hasSupabaseConfig || !supabase) throw new Error('Supabase configuration missing.');
 
       if (isSignUp) {
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
+        const pendingBusiness = {
+          business_name: businessName,
+          trade: businessTrade,
+          contact_email: businessContactEmail || email,
+          contact_phone: businessContactPhone,
+        };
+        // Business details ride along in user metadata so they survive the
+        // email-confirmation step; the business is created once signed in.
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { pending_business: pendingBusiness },
+            emailRedirectTo: `${window.location.origin}/login`,
+          },
+        });
         if (signUpError) throw signUpError;
         if (signUpData.user?.identities && signUpData.user.identities.length === 0) {
           throw new Error('An account with this email already exists. Please sign in instead.');
         }
-        const userId = signUpData.user?.id;
-        if (!userId) throw new Error('User ID not returned after sign up.');
 
-        const res = await fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId,
-            business_name: businessName,
-            trade: businessTrade,
-            contact_email: businessContactEmail || email,
-            contact_phone: businessContactPhone,
-            plan: businessPlan || null
-          }),
-        });
-        const result = await res.json();
-        if (!res.ok) throw new Error(result.message || 'Failed to create business.');
-
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (!sessionData.session) {
-          setMessage('Business registered! Please check your email to confirm your account before signing in.');
-          setLoading(false);
+        if (!signUpData.session || !signUpData.user) {
+          setMessage('Almost done! Check your email to confirm your account, then sign in.');
           return;
         }
-        window.localStorage.setItem('hvap-session', JSON.stringify(sessionData.session));
-        window.localStorage.setItem('hvap-user', JSON.stringify(signUpData.user));
-        window.localStorage.setItem('hvap-business', JSON.stringify({ id: result.id, name: result.business_name }));
-        setMessage('Account created! Redirecting to your dashboard…');
-        router.replace('/dashboard');
+
+        await finishSignIn(signUpData.session, signUpData.user);
         return;
       }
 
       if (useMagicLink) {
-        const { error } = await supabase.auth.signInWithOtp({ email });
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+          options: { emailRedirectTo: `${window.location.origin}/login` },
+        });
         if (error) throw error;
         setMessage('Check your email for the magic sign‑in link!');
         return;
@@ -110,32 +160,9 @@ export default function LoginPage() {
 
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-
-      if (data.session) {
-        window.localStorage.setItem('hvap-session', JSON.stringify(data.session));
-        window.localStorage.setItem('hvap-user', JSON.stringify(data.user));
-
-        const bizRes = await fetch('/api/my-businesses', {
-          headers: { Authorization: `Bearer ${data.session.access_token}` }
-        });
-        const bizData = await bizRes.json();
-        const bizList = Array.isArray(bizData) ? bizData : [];
-        setBusinesses(bizList);
-
-        if (bizList.length === 0) {
-          router.replace('/dashboard');
-          return;
-        }
-        if (bizList.length === 1) {
-          window.localStorage.setItem('hvap-business', JSON.stringify({ id: bizList[0].id, name: bizList[0].business_name }));
-          router.replace('/dashboard');
-          return;
-        }
-        setSelectedBizId(bizList[0].id);
-        setShowBizSelect(true);
-      }
-    } catch (err: any) {
-      setMessage(err.message || 'Unable to sign in / sign up.');
+      if (data.session && data.user) await finishSignIn(data.session, data.user);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Unable to sign in / sign up.');
     } finally {
       setLoading(false);
     }
@@ -354,15 +381,9 @@ export default function LoginPage() {
                         <span style={{ color: '#475569', fontSize: '0.9rem' }}>Contact Phone</span>
                         <input type="tel" value={businessContactPhone} onChange={(e) => setBusinessContactPhone(e.target.value)} placeholder="+1 555 1234" />
                       </label>
-                      <label style={{ display: 'grid', gap: '6px' }}>
-                        <span style={{ color: '#475569', fontSize: '0.9rem' }}>Plan</span>
-                        <select value={businessPlan} onChange={(e) => setBusinessPlan(e.target.value)}>
-                          <option value="">Select a plan (optional)</option>
-                          <option value="starter">Starter</option>
-                          <option value="pro">Pro</option>
-                          <option value="enterprise">Enterprise</option>
-                        </select>
-                      </label>
+                      <p style={{ color: '#475569', fontSize: '0.85rem', margin: 0 }}>
+                        Every account starts with a 14-day free trial. No card needed; pick a plan from your dashboard.
+                      </p>
                     </>
                   )}
 
