@@ -112,7 +112,8 @@ export default function ClientMarketplacePage() {
       setSelectedContractor('');
       setSelectedContractorId('');
       setTargetBusinessUuid('');
-    } catch (error: any) {
+    } catch (caught) {
+      const error = caught instanceof Error ? caught : new Error('Something went wrong.');
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
         setStatus('⏱️ Timeout Error: Service request execution timed out after 30 seconds before completion. The request was terminated. Please try again.');
@@ -293,7 +294,7 @@ export default function ClientMarketplacePage() {
                   style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}
                 />
                 <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                  Paste a contractor's Business UUID here to direct your lead straight to their private dashboard.
+                  Paste a contractor&apos;s Business UUID here to direct your lead straight to their private dashboard.
                 </span>
               </label>
 

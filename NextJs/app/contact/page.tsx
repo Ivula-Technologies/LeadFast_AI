@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import LogoutButton from '../components/LogoutButton';
 
@@ -55,7 +56,8 @@ export default function ContactPage() {
         setTargetBusinessUuid('');
         setMessage('');
       }
-    } catch (error: any) {
+    } catch (caught) {
+      const error = caught instanceof Error ? caught : new Error('Something went wrong.');
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
         setStatus('⏱️ Timeout Error: Service execution timed out after 30 seconds before completion. The request was terminated. Please try again.');
@@ -79,7 +81,7 @@ export default function ContactPage() {
             <h1 style={{ margin: 0, fontSize: '1.8rem' }}>LeadFast AI Contact Form</h1>
           </div>
           <nav className="nav" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            <a href="/">Overview</a>
+            <Link href="/">Overview</Link>
             <a href="/leads">Leads</a>
             <a href="/contact" className="active">LeadFast AI</a>
             <a href="/login">Login</a>
@@ -127,7 +129,7 @@ export default function ContactPage() {
                   style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}
                 />
                 <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                  Paste a contractor's Business UUID to route this lead directly to their workspace.
+                  Paste a contractor&apos;s Business UUID to route this lead directly to their workspace.
                 </span>
               </label>
 
