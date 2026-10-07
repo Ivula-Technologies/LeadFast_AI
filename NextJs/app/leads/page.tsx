@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import LogoutButton from '../components/LogoutButton';
 import { supabaseAnon as supabase, hasSupabaseConfig } from '@/lib/supabase';
 
@@ -19,10 +20,18 @@ export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   async function fetchLeads() {
     if (!hasSupabaseConfig || !supabase) return;
     try {
+      // Signed out (or the session expired): go to the login page instead of showing an empty list.
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        router.replace('/login');
+        return;
+      }
+
       let bizId: string | null = null;
       if (typeof window !== 'undefined') {
         const storedBiz = window.localStorage.getItem('hvap-business');
