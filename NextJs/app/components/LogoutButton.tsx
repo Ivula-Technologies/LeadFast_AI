@@ -13,6 +13,7 @@ export default function LogoutButton() {
     window.localStorage.removeItem('hvap-user');
     window.localStorage.removeItem('hvap-business');
     window.localStorage.removeItem('hvap-leads');
+    window.localStorage.removeItem('hvap-onboarded');
     window.localStorage.setItem('hvap-logout-message', 'You have been signed out.');
     router.push('/login');
   }
