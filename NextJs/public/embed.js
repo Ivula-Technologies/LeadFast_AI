@@ -10,12 +10,21 @@
 
     // 1. Get Configuration
     const currentScript = document.currentScript;
+    // Post leads back to the LeadFast server that served this script.
+    let defaultApiUrl = '/api/leads';
+    try {
+        if (currentScript && currentScript.src) {
+            defaultApiUrl = new URL('/api/leads', currentScript.src).toString();
+        }
+    } catch (e) {
+        // Keep the relative default.
+    }
     const config = {
         businessId: currentScript ? currentScript.getAttribute('data-business-id') : null,
-        apiUrl: (currentScript && currentScript.getAttribute('data-api-url')) || 'https://api.leadfast.ai/v1/leads',
+        apiUrl: (currentScript && currentScript.getAttribute('data-api-url')) || defaultApiUrl,
         timeout: parseInt((currentScript && currentScript.getAttribute('data-timeout')) || '3000', 10),
         silentMode: currentScript ? currentScript.getAttribute('data-silent') === 'true' : false,
-        successMessage: (currentScript && currentScript.getAttribute('data-success-message')) || 'Thank you! We will get back to you within 30 seconds.',
+        successMessage: (currentScript && currentScript.getAttribute('data-success-message')) || 'Thank you! Check your inbox for our reply.',
         themeColor: (currentScript && currentScript.getAttribute('data-theme-color')) || '#00b4d8'
     };
 

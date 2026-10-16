@@ -1,12 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { supabaseAnon } from '@/lib/supabase';
 
 export default function LogoutButton() {
   const router = useRouter();
 
-  function handleLogout() {
+  async function handleLogout() {
     if (typeof window === 'undefined') return;
+    await supabaseAnon?.auth.signOut();
     window.localStorage.removeItem('hvap-session');
     window.localStorage.removeItem('hvap-user');
     window.localStorage.removeItem('hvap-business');

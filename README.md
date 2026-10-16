@@ -16,7 +16,6 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-06B6D4?logo=tailwindcss&logoColor=white)
 ![Claude](https://img.shields.io/badge/Claude-AI-orange)
-![Vercel](https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white)
 
 </p>
 
@@ -98,7 +97,8 @@ LeadFast_AI/
 │
 ├── Supabase/
 │   ├── schema.sql
-│   └── rls.sql
+│   ├── rls.sql
+│   └── billing.sql
 │
 └── README.md
 ```
@@ -134,17 +134,7 @@ npm install
 
 ### Configure environment variables
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=
-
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-
-SUPABASE_SERVICE_ROLE_KEY=
-
-ANTHROPIC_API_KEY=
-
-RESEND_API_KEY=
-```
+Copy `NextJs/.env.example` to `NextJs/.env.local` and fill it in. Run `Supabase/schema.sql`, `Supabase/rls.sql` and `Supabase/billing.sql` in your Supabase project.
 
 ### Run locally
 
@@ -156,21 +146,31 @@ npm run dev
 
 ## 🔒 Security
 
-- Supabase Authentication
-- Row-Level Security (RLS)
-- Secure API Routes
-- Protected Environment Variables
+- Contractor data is only readable by its owner (Supabase Auth + Row-Level Security; API routes verify the access token).
+- Public lead intake validates input, rate-limits per IP, and only accepts leads for an existing business.
+- Billing state is written only by verified Stripe webhooks.
+
+---
+
+## 💳 Billing
+
+- 14-day free trial on sign-up, no card required.
+- Starter ($49/mo, 100 instant replies a month) and Pro ($99/mo, unlimited) via Stripe Checkout; customers manage cards and cancel in the Stripe portal.
+- When a trial ends or a plan's monthly replies run out, leads are still saved and the contractor is still emailed; only the automatic customer reply pauses.
 
 ---
 
 ## 🌍 Deployment
 
+Hosted on cPanel (Setup Node.js App). See [DEPLOY.md](DEPLOY.md).
+
 | Service | Purpose |
 |---------|---------|
-| ▲ Vercel | Hosting |
+| cPanel Node.js | Hosting |
 | 🗄 Supabase | Database & Authentication |
-| 🤖 Claude API | AI Responses |
+| 🤖 Gemini / Claude | AI Responses |
 | 📧 Resend | Email Delivery |
+| 💳 Stripe | Subscriptions |
 
 ---
 
@@ -207,5 +207,5 @@ This repository showcases **LeadFast AI**, a real-world SaaS platform built to a
 ---
 
 <p align="center">
-Built with ❤️ using Next.js, Supabase, Claude AI & Vercel.
+Built with ❤️ using Next.js, Supabase and Claude AI.
 </p>
