@@ -49,6 +49,9 @@ cp -a public ../cpanel-package/public
 2. **Setup Node.js App** > Create application: Node.js 20+, mode Production, application root `leadfast`, application URL `leadfast.ivulatechnologies.com`, startup file `server.js`.
 3. Add every variable from `NextJs/.env.example` under **Environment variables**, then restart the app.
 4. Make sure SSL (AutoSSL) is active on the subdomain.
+5. **Cron Jobs** > add a daily job (e.g. 09:00) that emails trial businesses 3 days before and on the day their trial ends:
+   `curl -fsS -H "Authorization: Bearer YOUR_CRON_SECRET" https://leadfast.ivulatechnologies.com/api/cron/trial-reminders > /dev/null`
+6. Add `https://leadfast.ivulatechnologies.com/api/health` to a free UptimeRobot HTTP monitor with email alerts. It returns 503 and the names of any missing settings when something isn't configured.
 
 ## 6. Smoke test
 
