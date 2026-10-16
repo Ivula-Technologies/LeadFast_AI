@@ -1175,6 +1175,21 @@ export default function LandingPage() {
                 <span className="badge">✓ Verified Platform</span>
                 <span className="badge warn">⚡ 24/7 AI Dispatch</span>
               </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginTop: '24px' }}>
+                <img
+                  src="/images/team/bius-founder.webp"
+                  alt="Bius Michael Joseph, Founder and CEO of Ivula Technologies"
+                  width={56}
+                  height={56}
+                  loading="lazy"
+                  style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #ffffff', boxShadow: '0 2px 8px rgba(15, 23, 42, 0.15)' }}
+                />
+                <div style={{ fontFamily: 'Inter, sans-serif' }}>
+                  <div style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase' }}>Built by</div>
+                  <div style={{ fontWeight: 600, color: '#0f172a', fontFamily: 'Poppins, sans-serif' }}>Bius Michael Joseph</div>
+                  <div style={{ color: '#475569', fontSize: '0.85rem' }}>Founder &amp; CEO, Ivula Technologies</div>
+                </div>
+              </div>
             </div>
 
             {/* Owner Support Contact Details */}
