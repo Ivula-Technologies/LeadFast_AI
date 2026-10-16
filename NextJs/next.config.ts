@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Self-contained server build for cPanel "Setup Node.js App" (see DEPLOY.md).
+  output: "standalone",
 };
 
 export default nextConfig;

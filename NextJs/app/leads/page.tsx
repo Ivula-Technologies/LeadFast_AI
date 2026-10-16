@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import LogoutButton from '../components/LogoutButton';
 import { supabaseAnon as supabase, hasSupabaseConfig } from '@/lib/supabase';
@@ -21,7 +22,6 @@ export default function LeadsPage() {
 
   async function fetchLeads() {
     if (!hasSupabaseConfig || !supabase) return;
-    setLoading(true);
     try {
       let bizId: string | null = null;
       if (typeof window !== 'undefined') {
@@ -35,10 +35,7 @@ export default function LeadsPage() {
         }
       }
 
-      if (!bizId) {
-        setLeads([]);
-        return;
-      }
+      if (!bizId) return;
 
       const { data, error } = await supabase
         .from('leads')
@@ -53,11 +50,17 @@ export default function LeadsPage() {
       }
     } catch (err) {
       console.error('Fetch error:', err);
-    } finally {
-      setLoading(false);
     }
   }
 
+  async function refreshLeads() {
+    setLoading(true);
+    await fetchLeads();
+    setLoading(false);
+  }
+
+  // fetchLeads only sets state after awaiting Supabase; the rule can't see through the call.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchLeads(); }, []);
 
   const filteredLeads = useMemo(() => {
@@ -74,7 +77,7 @@ export default function LeadsPage() {
             <h1 style={{ margin: 0, fontSize: '1.8rem' }}>Contractor lead queue</h1>
           </div>
           <nav className="nav" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            <a href="/">Overview</a>
+            <Link href="/">Overview</Link>
             <a href="/leads" className="active">Leads</a>
             <a href="/contact">LeadFast AI</a>
             <a href="/login">Login</a>
@@ -97,7 +100,7 @@ export default function LeadsPage() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               {hasSupabaseConfig && (
-                <button onClick={fetchLeads} disabled={loading} className="btn" style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#f1f5f9', color: '#0f172a', border: '1px solid var(--border)' }}>
+                <button onClick={refreshLeads} disabled={loading} className="btn" style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#f1f5f9', color: '#0f172a', border: '1px solid var(--border)' }}>
                   {loading ? 'Refreshing...' : 'Refresh'}
                 </button>
               )}

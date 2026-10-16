@@ -1,0 +1,55 @@
+name: Build cPanel Package
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: NextJs
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: NextJs/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+
+      - name: Build
+        env:
+          # Browser-visible values are baked in at build time. Set them as
+          # repository variables (Settings > Secrets and variables > Actions > Variables).
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key' }}
+          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL || 'https://leadfast.ivulatechnologies.com' }}
+        run: npm run build
+
+      - name: Assemble package
+        run: |
+          mkdir -p ../cpanel-package/.next
+          cp -a .next/standalone/. ../cpanel-package/
+          cp -a .next/static ../cpanel-package/.next/static
+          cp -a public ../cpanel-package/public
+          cp .env.example ../cpanel-package/.env.example
+          cp ../DEPLOY.md ../cpanel-package/DEPLOY.md
+          cp -a ../Supabase ../cpanel-package/Supabase
+          test -f ../cpanel-package/server.js
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: leadfast-cpanel
+          path: cpanel-package/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
