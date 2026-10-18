@@ -29,6 +29,7 @@ function daysLeft(iso: string | null) {
 export default function BillingPanel({ businessId }: { businessId: string }) {
   const [entitlement, setEntitlement] = useState<Entitlement | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [missed, setMissed] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState('');
 
@@ -43,6 +44,7 @@ export default function BillingPanel({ businessId }: { businessId: string }) {
       if (cancelled) return;
       setEntitlement(data.entitlement);
       setPlans(data.plans);
+      setMissed(data.missedThisMonth ?? 0);
     })().catch(() => {
       if (!cancelled) setError('Could not load billing status.');
     });
@@ -83,6 +85,7 @@ export default function BillingPanel({ businessId }: { businessId: string }) {
   else headline = 'Subscription inactive';
 
   const warn = !entitlement.canAutoReply;
+  const trialEndingSoon = entitlement.state === 'trial' && daysLeft(entitlement.trialEndsAt) <= 3;
 
   return (
     <div className="panel card p-5 sm:p-6 rounded-2xl bg-white/95 border border-slate-200 shadow-lg space-y-4">
@@ -106,6 +109,19 @@ export default function BillingPanel({ businessId }: { businessId: string }) {
           </button>
         )}
       </div>
+
+      {warn && missed > 0 && (
+        <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs sm:text-sm text-amber-900">
+          <strong>{missed} {missed === 1 ? 'customer' : 'customers'}</strong> contacted you this month without getting an instant reply.
+          Contractors who reply first usually win the job. {subscribed ? 'Upgrade to Pro' : 'Choose a plan'} to turn instant replies back on.
+        </div>
+      )}
+
+      {trialEndingSoon && (
+        <div className="p-3.5 rounded-xl bg-sky-50 border border-sky-200 text-xs sm:text-sm text-sky-900">
+          Your trial ends soon. Pick a plan now and your instant replies keep running without a gap.
+        </div>
+      )}
 
       {!subscribed && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

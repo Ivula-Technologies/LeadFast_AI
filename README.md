@@ -98,7 +98,8 @@ LeadFast_AI/
 ├── Supabase/
 │   ├── schema.sql
 │   ├── rls.sql
-│   └── billing.sql
+│   ├── billing.sql
+│   └── pipeline.sql
 │
 └── README.md
 ```
@@ -134,7 +135,7 @@ npm install
 
 ### Configure environment variables
 
-Copy `NextJs/.env.example` to `NextJs/.env.local` and fill it in. Run `Supabase/schema.sql`, `Supabase/rls.sql` and `Supabase/billing.sql` in your Supabase project.
+Copy `NextJs/.env.example` to `NextJs/.env.local` and fill it in. Run `Supabase/schema.sql`, `Supabase/rls.sql`, `Supabase/billing.sql` and `Supabase/pipeline.sql` in your Supabase project.
 
 ### Run locally
 

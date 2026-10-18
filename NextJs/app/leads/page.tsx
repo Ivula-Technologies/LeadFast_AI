@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import LogoutButton from '../components/LogoutButton';
 import { supabaseAnon as supabase, hasSupabaseConfig } from '@/lib/supabase';
+import { LEAD_STATUSES, normalizeStatus } from '@/lib/pipeline';
 
 interface Lead {
   id: string;
@@ -74,7 +75,7 @@ export default function LeadsPage() {
 
   const filteredLeads = useMemo(() => {
     if (selectedStatus === 'All') return leads;
-    return leads.filter((lead) => lead.status === selectedStatus);
+    return leads.filter((lead) => normalizeStatus(lead.status) === selectedStatus);
   }, [leads, selectedStatus]);
 
   return (
@@ -115,9 +116,9 @@ export default function LeadsPage() {
               )}
               <select aria-label="Filter leads" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
                 <option value="All">All</option>
-                <option value="New">New</option>
-                <option value="Follow-up">Follow-up</option>
-                <option value="Booked">Booked</option>
+                {LEAD_STATUSES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -133,7 +134,7 @@ export default function LeadsPage() {
                     <div style={{ color: '#475569', fontSize: '0.95rem' }}>{lead.lead_email}</div>
                     {lead.lead_phone && <div style={{ color: '#475569', fontSize: '0.95rem' }}>{lead.lead_phone}</div>}
                   </div>
-                  <span className={`badge ${lead.status === 'Booked' ? '' : 'warn'}`}>{lead.status}</span>
+                  <span className={`badge ${['Booked', 'Won'].includes(normalizeStatus(lead.status)) ? '' : 'warn'}`}>{normalizeStatus(lead.status)}</span>
                 </div>
                 {lead.message && <p style={{ margin: '10px 0 0', color: '#1e293b' }}>{lead.message}</p>}
               </div>
