@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import LogoutButton from '../components/LogoutButton';
 import BillingPanel from '../components/BillingPanel';
 import { supabaseAnon as supabase, hasSupabaseConfig } from '@/lib/supabase';
+import { authHeaders } from '@/lib/session';
+import { LEAD_STATUSES, normalizeStatus, type LeadStatus } from '@/lib/pipeline';
 
 interface Business {
   id: string;
@@ -23,8 +25,19 @@ interface Lead {
   lead_phone: string | null;
   message: string | null;
   status: string;
+  job_value: number | string | null;
   created_at: string;
 }
+
+const STATUS_STYLES: Record<LeadStatus, string> = {
+  New: 'bg-amber-100 text-amber-800 border-amber-300',
+  Contacted: 'bg-sky-100 text-sky-800 border-sky-300',
+  Booked: 'bg-indigo-100 text-indigo-800 border-indigo-300',
+  Won: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+  Lost: 'bg-slate-100 text-slate-600 border-slate-300',
+};
+
+const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
 export default function ContractorDashboard() {
   const [business, setBusiness] = useState<Business | null>(null);
@@ -33,6 +46,11 @@ export default function ContractorDashboard() {
   const [filterStatus, setFilterStatus] = useState('All');
   const [copied, setCopied] = useState(false);
   const [copiedUuid, setCopiedUuid] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [testState, setTestState] = useState<'idle' | 'sending' | 'sent'>('idle');
+  const [testMessage, setTestMessage] = useState('');
+  const [leadError, setLeadError] = useState('');
+  const [jobValues, setJobValues] = useState<Record<string, string>>({});
   
   // Onboarding Modal State
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -106,15 +124,88 @@ export default function ContractorDashboard() {
     }
   }
 
+  async function reloadLeads() {
+    if (!supabase || !business?.id) return;
+    const { data, error } = await supabase
+      .from('leads')
+      .select('*')
+      .eq('business_id', business.id)
+      .order('created_at', { ascending: false });
+    if (!error && data) setLeads(data as Lead[]);
+  }
+
+  async function updateLead(id: string, change: { status?: LeadStatus; job_value?: number | null }) {
+    setLeadError('');
+    const previous = leads;
+    setLeads((all) => all.map((l) => (l.id === id ? { ...l, ...change } : l)));
+    try {
+      const res = await fetch(`/api/leads/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
+        body: JSON.stringify(change),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || 'Could not update the lead.');
+      setLeads((all) => all.map((l) => (l.id === id ? (data.data as Lead) : l)));
+    } catch (err) {
+      setLeads(previous);
+      setLeadError(err instanceof Error ? err.message : 'Could not update the lead.');
+    }
+  }
+
+  function saveJobValue(lead: Lead) {
+    const raw = jobValues[lead.id];
+    if (raw === undefined) return;
+    const cleaned = raw.replace(/[$,\s]/g, '');
+    const value = cleaned === '' ? null : Number(cleaned);
+    if (value !== null && (!Number.isFinite(value) || value < 0)) {
+      setLeadError('Enter the job value as a dollar amount, like 1250.');
+      return;
+    }
+    if (value === (lead.job_value === null ? null : Number(lead.job_value))) return;
+    updateLead(lead.id, { job_value: value });
+  }
+
+  async function sendTestLead() {
+    if (!business?.id) return;
+    setTestState('sending');
+    setTestMessage('');
+    try {
+      const res = await fetch('/api/leads/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
+        body: JSON.stringify({ business_id: business.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || 'Could not send the test lead.');
+      setTestState('sent');
+      setTestMessage('Test lead sent. Check your inbox: the instant reply your customers get and your new-lead alert are on their way.');
+      // The reply is written after the response, so give it a moment before refreshing.
+      setTimeout(() => { reloadLeads(); }, 2500);
+    } catch (err) {
+      setTestState('idle');
+      setTestMessage(err instanceof Error ? err.message : 'Could not send the test lead.');
+    }
+  }
+
+  function getQuoteLink() {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    return business?.id ? `${origin}/q/${business.id}` : '';
+  }
+
   function getEmbedSnippet() {
     const businessId = business?.id || 'YOUR_BUSINESS_ID';
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     return `<script\n  src="${origin}/embed.js"\n  data-business-id="${businessId}"\n  async>\n</script>`;
   }
 
-  const visibleLeads = filterStatus === 'All' 
-    ? leads 
-    : leads.filter(l => l.status === filterStatus);
+  const visibleLeads = filterStatus === 'All'
+    ? leads
+    : leads.filter(l => normalizeStatus(l.status) === filterStatus);
+
+  const wonLeads = leads.filter((l) => normalizeStatus(l.status) === 'Won');
+  const wonRevenue = wonLeads.reduce((sum, l) => sum + (Number(l.job_value) || 0), 0);
+  const bookedOrWon = leads.filter((l) => ['Booked', 'Won'].includes(normalizeStatus(l.status))).length;
 
   // Derive a stable title string for the typewriter
   const dashboardTitle = business?.business_name || 'Contractor Dashboard';
@@ -166,7 +257,7 @@ export default function ContractorDashboard() {
         </div>
 
         {/* Business Summary KPI */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="panel card kpi p-5 rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50/50 border border-slate-200">
             <div className="label text-slate-600 text-xs sm:text-sm font-medium">Registered Trade</div>
             <div className="value text-lg sm:text-xl font-bold text-slate-900 mt-1 capitalize">
@@ -180,9 +271,87 @@ export default function ContractorDashboard() {
               {loading ? '—' : leads.length}
             </div>
           </div>
+
+          <div className="panel card kpi p-5 rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50/50 border border-slate-200">
+            <div className="label text-slate-600 text-xs sm:text-sm font-medium">Booked or Won</div>
+            <div className="value text-2xl font-bold text-slate-900 mt-1">
+              {loading ? '—' : bookedOrWon}
+              {!loading && leads.length > 0 && (
+                <span className="text-sm font-semibold text-slate-500 ml-2">
+                  {Math.round((bookedOrWon / leads.length) * 100)}%
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="panel card kpi p-5 rounded-2xl bg-gradient-to-br from-emerald-50 to-green-50/50 border border-slate-200">
+            <div className="label text-slate-600 text-xs sm:text-sm font-medium">Won from LeadFast Leads</div>
+            <div className="value text-2xl font-bold text-emerald-700 mt-1">
+              {loading ? '—' : usd.format(wonRevenue)}
+            </div>
+            <div className="text-xs text-slate-500 mt-0.5">
+              {wonLeads.length} {wonLeads.length === 1 ? 'job' : 'jobs'} marked Won
+            </div>
+          </div>
         </div>
 
         {business?.id && <BillingPanel businessId={business.id} />}
+
+        {/* Quote link + test lead: the fastest way to a first lead */}
+        {business?.id && (
+          <div className="panel card p-5 sm:p-6 rounded-2xl bg-white/95 border border-slate-200 shadow-lg space-y-4">
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold" style={{ color: '#0284c7' }}>
+                {leads.length === 0 ? 'Get your first lead in 2 minutes' : 'Your quote request link'}
+              </h2>
+              <p className="text-slate-600 text-xs sm:text-sm mt-1">
+                No website needed. Share this link on your Google Business Profile, Facebook page, Instagram bio, Yelp, Nextdoor or in a text.
+                Every request gets an instant reply and lands here.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2.5">
+              <input
+                readOnly
+                value={getQuoteLink()}
+                onClick={(e) => (e.target as HTMLInputElement).select()}
+                aria-label="Your quote request link"
+                className="flex-1 font-mono text-xs sm:text-sm px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sky-800 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(getQuoteLink());
+                  setCopiedLink(true);
+                  setTimeout(() => setCopiedLink(false), 2500);
+                }}
+                className={`w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl text-white transition cursor-pointer ${copiedLink ? 'bg-emerald-600' : 'shiny-btn'}`}
+              >
+                {copiedLink ? '✓ Link Copied!' : '🔗 Copy Link'}
+              </button>
+              <a
+                href={getQuoteLink()}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 transition text-center"
+              >
+                Preview
+              </a>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-1 border-t border-slate-100">
+              <button
+                type="button"
+                disabled={testState === 'sending'}
+                onClick={sendTestLead}
+                className="w-full sm:w-auto mt-3 px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-sky-50 text-sky-700 border border-sky-300 hover:bg-sky-100 transition cursor-pointer disabled:opacity-60"
+              >
+                {testState === 'sending' ? 'Sending…' : '✉️ Send Myself a Test Lead'}
+              </button>
+              <p className={`text-xs sm:text-sm sm:mt-3 ${testState === 'sent' ? 'text-emerald-700' : testMessage ? 'text-red-600' : 'text-slate-500'}`}>
+                {testMessage || 'See exactly what your customers receive. A test uses one instant reply from your allowance.'}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Embed Widget Code Snippet Section */}
         <div className="panel card p-5 sm:p-6 rounded-2xl bg-white/95 border border-slate-200 shadow-lg space-y-4">
@@ -265,13 +434,14 @@ export default function ContractorDashboard() {
                 className="w-full sm:w-auto px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-slate-800 text-xs sm:text-sm focus:outline-none focus:border-sky-500"
               >
                 <option value="All">All statuses</option>
-                <option value="New">New</option>
-                <option value="received">Received</option>
-                <option value="Follow-up">Follow-up</option>
-                <option value="Booked">Booked</option>
+                {LEAD_STATUSES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
               </select>
             )}
           </div>
+
+          {leadError && <p className="text-sm text-red-600">{leadError}</p>}
 
           {loading ? (
             <p className="text-slate-600 text-sm py-4">Loading your leads...</p>
@@ -281,7 +451,7 @@ export default function ContractorDashboard() {
                 No leads captured yet.
               </p>
               <p className="text-xs sm:text-sm text-slate-500 mt-1.5 max-w-md mx-auto">
-                Once you embed your JS script tag into your website, new lead inquiries will automatically appear here in real time.
+                Share your quote link or embed the script on your website, and new enquiries will appear here.
               </p>
               <button
                 type="button"
@@ -306,14 +476,35 @@ export default function ContractorDashboard() {
                         {lead.lead_phone && <span>• 📞 {lead.lead_phone}</span>}
                       </div>
                     </div>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                      lead.status === 'Booked' 
-                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
-                        : 'bg-amber-100 text-amber-800 border border-amber-300'
-                    }`}>
-                      {lead.status || 'New'}
-                    </span>
+                    <select
+                      aria-label={`Status for ${lead.lead_name}`}
+                      value={normalizeStatus(lead.status)}
+                      onChange={(e) => updateLead(lead.id, { status: e.target.value as LeadStatus })}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold border cursor-pointer focus:outline-none ${STATUS_STYLES[normalizeStatus(lead.status)]}`}
+                    >
+                      {LEAD_STATUSES.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
                   </div>
+
+                  {normalizeStatus(lead.status) === 'Won' && (
+                    <label className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+                      <span className="font-medium">Job value</span>
+                      <span className="relative">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                        <input
+                          inputMode="decimal"
+                          placeholder="0"
+                          value={jobValues[lead.id] ?? (lead.job_value === null ? '' : String(Number(lead.job_value)))}
+                          onChange={(e) => setJobValues((v) => ({ ...v, [lead.id]: e.target.value }))}
+                          onBlur={() => saveJobValue(lead)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                          className="w-32 pl-6 pr-2.5 py-1.5 rounded-lg bg-white border border-slate-300 focus:outline-none focus:border-emerald-500"
+                        />
+                      </span>
+                    </label>
+                  )}
 
                   {lead.message && (
                     <div className="p-3 rounded-xl bg-white border border-slate-200">

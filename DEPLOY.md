@@ -5,7 +5,7 @@ LeadFast runs as a Node.js app (Next.js standalone server) under cPanel's **Setu
 ## 1. Supabase (once)
 
 1. Create a Supabase project.
-2. In the SQL editor, run these files from `Supabase/` in order: `schema.sql`, `rls.sql`, `billing.sql`. All three are safe to re-run.
+2. In the SQL editor, run these files from `Supabase/` in order: `schema.sql`, `rls.sql`, `billing.sql`, `pipeline.sql`. All four are safe to re-run.
 3. Auth > URL Configuration: set **Site URL** to `https://leadfast.ivulatechnologies.com` and add `https://leadfast.ivulatechnologies.com/login` to **Redirect URLs** (used by email confirmation and magic links).
 
 ## 2. Resend (once)
