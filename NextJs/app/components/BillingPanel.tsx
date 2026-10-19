@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { authHeaders } from '@/lib/session';
+import { BOOKING_URL } from '@/lib/booking';
 
 interface Plan {
   key: 'starter' | 'pro';
@@ -116,6 +117,13 @@ export default function BillingPanel({ businessId }: { businessId: string }) {
           Contractors who reply first usually win the job. {subscribed ? 'Upgrade to Pro' : 'Choose a plan'} to turn instant replies back on.
         </div>
       )}
+
+      <p className="text-xs sm:text-sm text-slate-600">
+        Questions about plans or setup?{' '}
+        <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-sky-700 hover:underline">
+          Book a free call with our founder
+        </a>
+      </p>
 
       {trialEndingSoon && (
         <div className="p-3.5 rounded-xl bg-sky-50 border border-sky-200 text-xs sm:text-sm text-sky-900">
