@@ -279,7 +279,7 @@ Thanks for reaching out to ${business.business_name}. We've received your reques
 
 type Delivery = "sent" | "failed" | "not_configured";
 
-async function sendEmail(opts: {
+export async function sendEmail(opts: {
   fromName: string;
   to: string;
   replyTo?: string;

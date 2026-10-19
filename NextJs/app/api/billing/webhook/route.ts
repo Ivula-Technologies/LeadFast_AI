@@ -29,6 +29,8 @@ export async function POST(request: Request) {
     case "customer.subscription.created":
     case "customer.subscription.updated":
     case "customer.subscription.deleted":
+    case "customer.subscription.paused":
+    case "customer.subscription.resumed":
       subscriptionId = event.data.object.id;
       break;
     case "checkout.session.completed": {
@@ -42,7 +44,14 @@ export async function POST(request: Request) {
   }
 
   if (subscriptionId) {
-    await syncSubscription(await stripe.subscriptions.retrieve(subscriptionId));
+    try {
+      await syncSubscription(await stripe.subscriptions.retrieve(subscriptionId));
+    } catch (err) {
+      // A 500 makes Stripe retry, instead of the business silently keeping
+      // a stale plan after a database or network hiccup.
+      console.error(`Stripe webhook ${event.type} ${event.id} failed:`, err);
+      return Response.json({ error: "Sync failed." }, { status: 500 });
+    }
   }
 
   return Response.json({ received: true });
@@ -62,11 +71,12 @@ async function syncSubscription(subscription: Stripe.Subscription) {
 
   let businessId = subscription.metadata?.business_id;
   if (!businessId) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("billing")
       .select("business_id")
       .eq("stripe_customer_id", customerId)
       .maybeSingle();
+    if (error) throw new Error(`Billing lookup failed: ${error.message}`);
     businessId = data?.business_id;
   }
   if (!businessId) {
@@ -103,5 +113,5 @@ async function syncSubscription(subscription: Stripe.Subscription) {
     updated_at: new Date().toISOString(),
   });
 
-  if (error) console.error("Failed to sync subscription:", error);
+  if (error) throw new Error(`Failed to sync subscription ${subscription.id}: ${error.message}`);
 }
