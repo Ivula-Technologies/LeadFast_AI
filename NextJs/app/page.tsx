@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useTypewriter } from './hooks/useTypewriter';
+import { BOOKING_URL } from '@/lib/booking';
 
 // ─── Trade data for the animated carousel ───────────────────────────────────
 const TRADES = [
@@ -439,6 +440,29 @@ export default function LandingPage() {
               >
                 <span style={{ fontSize: '1.2rem' }}>🔧</span>
                 <span>Platform Features</span>
+              </a>
+
+              <a
+                href={BOOKING_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMenuOpen(false)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '14px 16px',
+                  borderRadius: '12px',
+                  background: 'rgba(2, 132, 199, 0.08)',
+                  color: '#0284c7',
+                  fontWeight: '700',
+                  fontFamily: 'Poppins, sans-serif',
+                  fontSize: '0.98rem',
+                  border: '1px solid rgba(2, 132, 199, 0.3)',
+                }}
+              >
+                <span style={{ fontSize: '1.2rem' }}>📅</span>
+                <span>Book a Google Meet call</span>
               </a>
 
               <a
@@ -1143,9 +1167,29 @@ export default function LandingPage() {
             <p style={{ color: '#475569', maxWidth: '540px', margin: '0 auto 28px', fontFamily: 'Inter, sans-serif' }}>
               Log in to access your business dashboard or submit a client service request today.
             </p>
-            <Link href="/login" className="shiny-green-btn">
-              Proceed to Login Page →
-            </Link>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link href="/login" className="shiny-green-btn">
+                Proceed to Login Page →
+              </Link>
+              <a
+                href={BOOKING_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '12px 24px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(2, 132, 199, 0.4)',
+                  color: '#0284c7',
+                  fontWeight: '700',
+                  fontFamily: 'Poppins, sans-serif',
+                  background: '#ffffff',
+                }}
+              >
+                📅 Book a call with our founder
+              </a>
+            </div>
           </div>
         </section>
       </main>
@@ -1240,6 +1284,22 @@ export default function LandingPage() {
                         ivula@gmail.com
                       </a>
                     </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '1.2rem' }}>📅</span>
+                  <div>
+                    <div style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                      One-on-one call
+                    </div>
+                    <a
+                      href={BOOKING_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: '#0284c7', fontWeight: '600' }}
+                    >
+                      Book a Google Meet with Bius
+                    </a>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
