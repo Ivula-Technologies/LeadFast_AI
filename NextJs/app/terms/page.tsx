@@ -46,7 +46,7 @@ export default function TermsPage() {
       <p>
         You own your business data and your leads. We use them only to run the service, as described in our{' '}
         <Link href="/privacy" className="text-sky-700 underline">Privacy Policy</Link>. You can delete a business and its leads from
-        Settings.
+        Settings; cancel any paid plan under Manage billing first.
       </p>
 
       <h2 className="no-underline">Availability and liability</h2>

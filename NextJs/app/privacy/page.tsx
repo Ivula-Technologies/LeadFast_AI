@@ -44,7 +44,7 @@ export default function PrivacyPage() {
 
       <h2 className="no-underline">Your choices and rights</h2>
       <p>
-        You can see and correct your business details in Settings and delete a business there. To access, export or delete
+        You can see and correct your business details in Settings and delete a business there (if it has a paid plan, cancel it under Manage billing first). To access, export or delete
         your data, or if you are a customer of a business that uses LeadFast and want your enquiry removed, email{' '}
         <a href="mailto:contact@ivula.co.ke" className="text-sky-700 underline">contact@ivula.co.ke</a>. We respond within 30
         days. California residents have the rights described in the CCPA, and we honor them for everyone.
