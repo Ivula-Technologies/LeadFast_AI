@@ -65,7 +65,6 @@ export default function ContractorDashboard() {
       if (typeof window === 'undefined') return;
 
       const storedBusiness = window.localStorage.getItem('hvap-business');
-      const onboardedFlag = window.localStorage.getItem('hvap-onboarded');
 
       const { data: sessionData } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
       if (!sessionData.session) {
@@ -84,10 +83,6 @@ export default function ContractorDashboard() {
 
       setBusiness(currentBiz);
 
-      // Auto open onboarding modal for first-time visitors
-      if (!onboardedFlag) {
-        setShowOnboarding(true);
-      }
 
       if (hasSupabaseConfig && supabase) {
         try {
@@ -221,7 +216,6 @@ export default function ContractorDashboard() {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
       }}
     >
       <section className="max-w-7xl mx-auto space-y-6">

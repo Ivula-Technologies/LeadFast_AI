@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useTypewriter } from '../hooks/useTypewriter';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabaseAnon as supabase, hasSupabaseConfig } from '@/lib/supabase';
 import type { Session, User } from '@supabase/supabase-js';
 
@@ -11,18 +11,20 @@ interface Business {
   business_name: string;
 }
 
-type Step = 'role_select' | 'auth_form';
-
 export default function LoginPage() {
-  const [welcomeTitle, welcomeDone] = useTypewriter('Welcome to LeadFast AI', 60, 200);
-  const [contractorTitle, contractorDone] = useTypewriter('Contractor Login', 60, 200);
-  const [signUpTitle, signUpDone] = useTypewriter('Contractor Sign Up', 60, 200);
-  const [step, setStep] = useState<Step>('role_select');
-  const [role, setRole] = useState<'contractor' | 'client' | null>(null);
-  
+  // useSearchParams needs a Suspense boundary on a prerendered page.
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
+  const searchParams = useSearchParams();
+  const [isSignUp, setIsSignUp] = useState(searchParams.get('signup') === '1');
   const [useMagicLink, setUseMagicLink] = useState(false);
   const [businessName, setBusinessName] = useState('');
   const [businessTrade, setBusinessTrade] = useState('');
@@ -58,15 +60,6 @@ export default function LoginPage() {
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  function handleSelectRole(selectedRole: 'contractor' | 'client') {
-    setRole(selectedRole);
-    if (selectedRole === 'client') {
-      router.push('/client');
-    } else {
-      setStep('auth_form');
-    }
-  }
 
   async function createBusiness(session: Session, details: Record<string, string>) {
     const res = await fetch('/api/register', {
@@ -175,246 +168,155 @@ export default function LoginPage() {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        backgroundImage: `linear-gradient(to bottom, rgba(248, 250, 252, 0.60), rgba(241, 245, 249, 0.72)), url('/images/roofing.jpg')`,
+        backgroundImage: `linear-gradient(to bottom, rgba(248, 250, 252, 0.60), rgba(241, 245, 249, 0.72)), url('/images/web/roofing.webp')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
       }}
     >
       <section className="container" style={{ padding: '40px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px' }}>
-        
-        {/* Main Interactive Card: Role Selection / Auth */}
-        <div className="panel card" style={{ width: '100%', maxWidth: '580px', padding: '32px' }}>
-          
-          {step === 'role_select' ? (
-            <div>
-              <h1 style={{ margin: '0 0 8px', fontSize: '2.2rem', minHeight: '1.2em' }}>
-                {welcomeTitle}
-                <span style={{ display: 'inline-block', width: '2px', height: '0.8em', background: '#0284c7', marginLeft: '3px', verticalAlign: 'middle', borderRadius: '2px', opacity: welcomeDone ? 0 : 1, animation: welcomeDone ? 'none' : 'blink 0.9s step-end infinite', transition: 'opacity 0.4s ease' }} />
-              </h1>
-              <style>{`@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
-              <p style={{ color: '#0284c7', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.24em', marginBottom: '16px', fontWeight: '600' }}>
-                Contractor & Client Access Portal
-              </p>
-              <h2 style={{ margin: '0 0 12px', fontSize: '1.4rem' }}>How would you like to proceed?</h2>
-              <p style={{ color: '#475569', marginBottom: '28px', lineHeight: '1.5' }}>
-                Please select your role to be directed to the appropriate portal.
-              </p>
+        <Link href="/" style={{ fontWeight: 800, fontSize: '1.3rem', color: '#3B0764' }}>
+          LeadFast <span style={{ color: '#F5A800' }}>AI</span>
+        </Link>
 
-              <div style={{ display: 'grid', gap: '18px' }}>
-                <button
-                  type="button"
-                  onClick={() => handleSelectRole('contractor')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    padding: '20px',
-                    borderRadius: '16px',
-                    background: 'linear-gradient(135deg, rgba(2, 132, 199, 0.12), rgba(56, 189, 248, 0.06))',
-                    border: '1px solid rgba(2, 132, 199, 0.3)',
-                    color: '#0f172a',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 6px 20px rgba(15, 23, 42, 0.05)'
-                  }}
-                >
-                  <img
-                    src="/images/appliance.png"
-                    alt="Contractor Icon"
-                    style={{
-                      width: '60px',
-                      height: '60px',
-                      borderRadius: '14px',
-                      objectFit: 'cover',
-                      border: '2px solid #0284c7',
-                      boxShadow: '0 4px 12px rgba(2, 132, 199, 0.25)',
-                      flexShrink: 0
-                    }}
-                  />
-                  <div>
-                    <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a', display: 'block', marginBottom: '2px' }}>
-                      I am a Contractor
-                    </span>
-                    <span style={{ fontSize: '0.88rem', fontWeight: '500', color: '#334155', lineHeight: '1.4', display: 'block' }}>
-                      Sign in to your private dashboard to view your business leads and metrics.
-                    </span>
-                  </div>
-                </button>
+        <div className="panel card" style={{ width: '100%', maxWidth: '480px', padding: '28px' }}>
+          <h1 className="no-underline" style={{ margin: '0 0 6px', fontSize: '1.7rem', display: 'block' }}>
+            {isSignUp ? 'Start your free trial' : 'Log in to LeadFast'}
+          </h1>
+          <p style={{ color: '#475569', margin: '0 0 20px', fontSize: '0.95rem' }}>
+            {isSignUp
+              ? '14 days free with every feature. No credit card needed.'
+              : 'See your leads, your quote link and your billing.'}
+          </p>
 
-                <button
-                  type="button"
-                  onClick={() => handleSelectRole('client')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    padding: '20px',
-                    borderRadius: '16px',
-                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(5, 150, 105, 0.05))',
-                    border: '1px solid rgba(52, 211, 153, 0.4)',
-                    color: '#0f172a',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 6px 20px rgba(15, 23, 42, 0.05)'
-                  }}
-                >
-                  <img
-                    src="/images/client.jpg"
-                    alt="Client Icon"
-                    style={{
-                      width: '60px',
-                      height: '60px',
-                      borderRadius: '14px',
-                      objectFit: 'cover',
-                      border: '2px solid #10b981',
-                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
-                      flexShrink: 0
-                    }}
-                  />
-                  <div>
-                    <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a', display: 'block', marginBottom: '2px' }}>
-                      I am a Client / Lead
-                    </span>
-                    <span style={{ fontSize: '0.88rem', fontWeight: '500', color: '#334155', lineHeight: '1.4', display: 'block' }}>
-                      Browse available contractors by trade and submit a service request.
-                    </span>
-                  </div>
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div>
+          {showBizSelect && businesses.length > 0 ? (
+            <div style={{ display: 'grid', gap: '12px' }}>
+              <label style={{ display: 'grid', gap: '6px' }}>
+                <span style={{ color: '#475569', fontSize: '0.9rem' }}>Choose a business</span>
+                <select value={selectedBizId} onChange={(e) => setSelectedBizId(e.target.value)}>
+                  {businesses.map((biz) => (
+                    <option key={biz.id} value={biz.id}>{biz.business_name}</option>
+                  ))}
+                </select>
+              </label>
               <button
                 type="button"
-                onClick={() => setStep('role_select')}
-                style={{ background: 'none', border: 'none', color: '#0284c7', cursor: 'pointer', padding: 0, marginBottom: '16px', fontSize: '0.9rem', fontWeight: '500' }}
+                className="btn"
+                style={{ color: 'white', padding: '10px 14px' }}
+                onClick={() => {
+                  const chosen = businesses.find((b) => b.id === selectedBizId);
+                  window.localStorage.setItem('hvap-business', JSON.stringify({ id: selectedBizId, name: chosen?.business_name }));
+                  router.replace('/dashboard');
+                }}
               >
-                ← Back to role selection
+                Continue to Dashboard
               </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '12px' }}>
+              {isSignUp && (
+                <>
+                  <label style={{ display: 'grid', gap: '6px' }}>
+                    <span style={{ color: '#475569', fontSize: '0.9rem' }}>Business name</span>
+                    <input required type="text" autoComplete="organization" value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Rivera Plumbing" />
+                  </label>
+                  <label style={{ display: 'grid', gap: '6px' }}>
+                    <span style={{ color: '#475569', fontSize: '0.9rem' }}>Trade</span>
+                    <input type="text" list="lf-trades" value={businessTrade} onChange={(e) => setBusinessTrade(e.target.value)} placeholder="Plumbing" />
+                    <datalist id="lf-trades">
+                      {['Plumbing', 'HVAC', 'Electrical', 'Roofing', 'Remodeling', 'Landscaping', 'Painting', 'Handyman', 'Cleaning', 'Pest control'].map((t) => (
+                        <option key={t} value={t} />
+                      ))}
+                    </datalist>
+                  </label>
+                </>
+              )}
 
-              <p style={{ color: '#0284c7', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.24em', marginBottom: '6px', fontWeight: '600' }}>
-                Contractor Access
-              </p>
-              <h1 style={{ margin: '0 0 8px', fontSize: '1.75rem', minHeight: '1.2em' }}>
-                {isSignUp ? signUpTitle : contractorTitle}
-                <span style={{ display: 'inline-block', width: '2px', height: '0.8em', background: '#0284c7', marginLeft: '3px', verticalAlign: 'middle', borderRadius: '2px', opacity: (isSignUp ? signUpDone : contractorDone) ? 0 : 1, animation: (isSignUp ? signUpDone : contractorDone) ? 'none' : 'blink 0.9s step-end infinite', transition: 'opacity 0.4s ease' }} />
-              </h1>
-              
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '18px' }}>
+              <label style={{ display: 'grid', gap: '6px' }}>
+                <span style={{ color: '#475569', fontSize: '0.9rem' }}>Email</span>
+                <input required type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@riveraplumbing.com" />
+              </label>
+
+              {(!useMagicLink || isSignUp) && (
+                <label style={{ display: 'grid', gap: '6px' }}>
+                  <span style={{ color: '#475569', fontSize: '0.9rem' }}>Password</span>
+                  <input
+                    required={!useMagicLink}
+                    type="password"
+                    minLength={isSignUp ? 8 : undefined}
+                    autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={isSignUp ? 'At least 8 characters' : '••••••••'}
+                  />
+                </label>
+              )}
+
+              {isSignUp && (
+                <>
+                  <label style={{ display: 'grid', gap: '6px' }}>
+                    <span style={{ color: '#475569', fontSize: '0.9rem' }}>Business phone <span style={{ color: '#94a3b8' }}>(shown to customers for urgent jobs)</span></span>
+                    <input type="tel" autoComplete="tel" value={businessContactPhone} onChange={(e) => setBusinessContactPhone(e.target.value)} placeholder="(512) 555-0142" />
+                  </label>
+                  <label style={{ display: 'grid', gap: '6px' }}>
+                    <span style={{ color: '#475569', fontSize: '0.9rem' }}>Email for new-lead alerts <span style={{ color: '#94a3b8' }}>(optional)</span></span>
+                    <input type="email" value={businessContactEmail} onChange={(e) => setBusinessContactEmail(e.target.value)} placeholder="Same as your login email" />
+                  </label>
+                </>
+              )}
+
+              {!isSignUp && (
                 <button
                   type="button"
                   data-plain="true"
-                  onClick={() => { setIsSignUp(!isSignUp); setShowBizSelect(false); }}
-                  style={{ background: 'transparent', border: '1px solid #0284c7', color: '#0284c7', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600' }}
+                  onClick={() => setUseMagicLink(!useMagicLink)}
+                  style={{ fontSize: '0.85rem', background: 'none', border: 'none', color: '#0284c7', cursor: 'pointer', textAlign: 'left', fontWeight: '500', padding: 0 }}
                 >
-                  {isSignUp ? 'Switch to Login' : 'Create Account'}
+                  {useMagicLink ? 'Use my password instead' : 'Forgot your password? Email me a sign-in link'}
                 </button>
-              </div>
-
-              {showBizSelect && businesses.length > 0 ? (
-                <div style={{ display: 'grid', gap: '12px' }}>
-                  <label style={{ display: 'grid', gap: '6px' }}>
-                    <span style={{ color: '#475569', fontSize: '0.9rem' }}>Select Business</span>
-                    <select value={selectedBizId} onChange={(e) => setSelectedBizId(e.target.value)}>
-                      {businesses.map((biz) => (
-                        <option key={biz.id} value={biz.id}>{biz.business_name}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <button
-                    type="button"
-                    className="btn"
-                    style={{ color: 'white', padding: '10px 14px' }}
-                    onClick={() => {
-                      const chosen = businesses.find((b) => b.id === selectedBizId);
-                      window.localStorage.setItem('hvap-business', JSON.stringify({ id: selectedBizId, name: chosen?.business_name }));
-                      router.replace('/dashboard');
-                    }}
-                  >
-                    Continue to Dashboard
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '12px' }}>
-                  <label style={{ display: 'grid', gap: '6px' }}>
-                    <span style={{ color: '#475569', fontSize: '0.9rem' }}>Email</span>
-                    <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contractor@company.com" />
-                  </label>
-
-                  {!isSignUp && (
-                    <button
-                      type="button"
-                      data-plain="true"
-                      onClick={() => setUseMagicLink(!useMagicLink)}
-                      style={{ fontSize: '0.8rem', background: 'none', border: 'none', color: '#0284c7', cursor: 'pointer', textAlign: 'left', fontWeight: '500' }}
-                    >
-                      {useMagicLink ? 'Switch to Password' : 'Use Magic Link instead'}
-                    </button>
-                  )}
-
-                  {(!useMagicLink || isSignUp) && (
-                    <label style={{ display: 'grid', gap: '6px' }}>
-                      <span style={{ color: '#475569', fontSize: '0.9rem' }}>Password</span>
-                      <input required={!useMagicLink} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
-                    </label>
-                  )}
-
-                  {isSignUp && (
-                    <>
-                      <label style={{ display: 'grid', gap: '6px' }}>
-                        <span style={{ color: '#475569', fontSize: '0.9rem' }}>Business Name</span>
-                        <input required type="text" value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Acme Plumbing Co." />
-                      </label>
-                      <label style={{ display: 'grid', gap: '6px' }}>
-                        <span style={{ color: '#475569', fontSize: '0.9rem' }}>Trade</span>
-                        <input type="text" value={businessTrade} onChange={(e) => setBusinessTrade(e.target.value)} placeholder="e.g. Plumbing, HVAC, Electrical" />
-                      </label>
-                      <label style={{ display: 'grid', gap: '6px' }}>
-                        <span style={{ color: '#475569', fontSize: '0.9rem' }}>Business Contact Email</span>
-                        <input type="email" value={businessContactEmail} onChange={(e) => setBusinessContactEmail(e.target.value)} placeholder="info@acme.com" />
-                      </label>
-                      <label style={{ display: 'grid', gap: '6px' }}>
-                        <span style={{ color: '#475569', fontSize: '0.9rem' }}>Contact Phone</span>
-                        <input type="tel" value={businessContactPhone} onChange={(e) => setBusinessContactPhone(e.target.value)} placeholder="+1 555 1234" />
-                      </label>
-                      <p style={{ color: '#475569', fontSize: '0.85rem', margin: 0 }}>
-                        Every account starts with a 14-day free trial. No card needed; pick a plan from your dashboard.
-                      </p>
-                    </>
-                  )}
-
-                  <button
-                    type="submit"
-                    className="btn"
-                    style={{ color: 'white', padding: '12px 16px', marginTop: '6px' }}
-                    disabled={loading}
-                  >
-                    {loading ? 'Processing…' : isSignUp ? 'Sign Up' : useMagicLink ? 'Send Magic Link' : 'Sign In'}
-                  </button>
-                </form>
               )}
 
-              {message && (
-                <p role="alert" style={{
-                  marginTop: '12px',
-                  color: message.includes('Unable') || message.includes('failed') || message.includes('Failed') || message.includes('exists') || message.includes('missing')
-                    ? '#dc2626'
-                    : message.startsWith('Account') || message.includes('registered') || message.includes('created')
-                    ? '#16a34a'
-                    : '#0284c7'
-                }}>
-                  {message}
+              <button
+                type="submit"
+                className="btn"
+                style={{ color: 'white', padding: '12px 16px', marginTop: '6px' }}
+                disabled={loading}
+              >
+                {loading ? 'Please wait…' : isSignUp ? 'Create my account' : useMagicLink ? 'Email me a sign-in link' : 'Log in'}
+              </button>
+
+              {isSignUp && (
+                <p style={{ color: '#64748b', fontSize: '0.8rem', margin: 0 }}>
+                  By creating an account you agree to the <Link href="/terms" style={{ color: '#0284c7' }}>Terms</Link> and{' '}
+                  <Link href="/privacy" style={{ color: '#0284c7' }}>Privacy Policy</Link>.
                 </p>
               )}
-            </div>
+            </form>
           )}
 
-        </div>
+          {message && (
+            <p role="alert" style={{
+              marginTop: '12px',
+              color: message.includes('Unable') || message.includes('failed') || message.includes('Failed') || message.includes('exists') || message.includes('missing') || message.includes('Invalid')
+                ? '#dc2626'
+                : '#0284c7'
+            }}>
+              {message}
+            </p>
+          )}
 
+          <p style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)', color: '#475569', fontSize: '0.9rem' }}>
+            {isSignUp ? 'Already have an account? ' : 'New to LeadFast? '}
+            <button
+              type="button"
+              data-plain="true"
+              onClick={() => { setIsSignUp(!isSignUp); setShowBizSelect(false); setMessage(''); }}
+              style={{ background: 'none', border: 'none', color: '#0284c7', cursor: 'pointer', padding: 0, fontWeight: 600 }}
+            >
+              {isSignUp ? 'Log in' : 'Start a free trial'}
+            </button>
+          </p>
+        </div>
       </section>
 
       {/* Website Owner / Company Footer Details */}
@@ -424,7 +326,7 @@ export default function LoginPage() {
             <div>
               <h3 style={{ margin: '0 0 8px', color: '#0f172a', fontSize: '1.1rem', fontWeight: '700' }}>LeadFast AI</h3>
               <p style={{ color: '#475569', fontSize: '0.85rem', margin: 0, maxWidth: '320px' }}>
-                Instant AI lead response and scheduling automation system for home service professionals. Powered by Ivula Technologies.
+                Instant replies to every new lead for home service contractors. Powered by Ivula Technologies.
               </p>
             </div>
             <div style={{ display: 'grid', gap: '8px', fontSize: '0.88rem', color: '#334155' }}>
@@ -437,7 +339,7 @@ export default function LoginPage() {
           </div>
           <div style={{ borderTop: '1px solid rgba(0, 0, 0, 0.08)', paddingTop: '16px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', color: '#64748b', fontSize: '0.8rem' }}>
             <span>© {new Date().getFullYear()} LeadFast AI. All rights reserved. Owned & Operated by Ivula Technologies.</span>
-            <span>HVAP Contractor Portal & Client Marketplace</span>
+            <span><Link href="/terms">Terms</Link> · <Link href="/privacy">Privacy</Link></span>
           </div>
         </div>
       </footer>

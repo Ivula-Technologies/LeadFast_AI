@@ -22,6 +22,11 @@ export default function SettingsPage() {
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
 
+  const [replyTone, setReplyTone] = useState('friendly_professional');
+  const [signature, setSignature] = useState('');
+  const [savingReply, setSavingReply] = useState(false);
+  const [replyMessage, setReplyMessage] = useState('');
+
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
 
@@ -77,6 +82,16 @@ export default function SettingsPage() {
         setContactPhone(data.contact_phone || '');
       }
 
+      const { data: replySettings } = await supabase
+        .from('settings')
+        .select('reply_tone, custom_signature')
+        .eq('business_id', cachedId)
+        .maybeSingle();
+      if (replySettings) {
+        setReplyTone(replySettings.reply_tone || 'friendly_professional');
+        setSignature(replySettings.custom_signature || '');
+      }
+
       setLoading(false);
     }
 
@@ -108,6 +123,18 @@ export default function SettingsPage() {
       setMessage('Business information updated successfully.');
     }
     setSaving(false);
+  }
+
+  async function handleSaveReply(event: React.FormEvent) {
+    event.preventDefault();
+    if (!businessId || !supabase) return;
+    setSavingReply(true);
+    setReplyMessage('');
+    const { error } = await supabase
+      .from('settings')
+      .upsert({ business_id: businessId, reply_tone: replyTone, custom_signature: signature.trim().slice(0, 500) || null });
+    setReplyMessage(error ? `Failed to save: ${error.message}` : 'Reply settings saved. New leads will use them.');
+    setSavingReply(false);
   }
 
   async function handleCreateBusiness(event: React.FormEvent) {
@@ -242,7 +269,7 @@ export default function SettingsPage() {
                     type="tel"
                     value={contactPhone}
                     onChange={(e) => setContactPhone(e.target.value)}
-                    placeholder="+1 555 1234"
+                    placeholder="(512) 555-0142"
                   />
                 </label>
 
@@ -257,6 +284,53 @@ export default function SettingsPage() {
                 {message && (
                   <p role="alert" className={`text-sm ${message.startsWith('Failed') ? 'text-red-600' : 'text-green-600'}`}>
                     {message}
+                  </p>
+                )}
+              </form>
+            </div>
+
+            {/* Instant reply settings */}
+            <div className="panel card p-5 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-md">
+              <h2 className="text-lg font-bold mb-1 text-[#0f172a]">Instant Reply</h2>
+              <p className="text-slate-500 text-sm mb-5">
+                Choose how the automatic reply sounds and how it is signed. It always thanks the customer, confirms what they asked
+                about and says you will be in touch, without quoting prices or promising times.
+              </p>
+
+              <form onSubmit={handleSaveReply} className="grid gap-4">
+                <label className="grid gap-1.5">
+                  <span className="text-sm text-slate-600">Tone</span>
+                  <select value={replyTone} onChange={(e) => setReplyTone(e.target.value)}>
+                    <option value="friendly_professional">Friendly and professional</option>
+                    <option value="warm_and_casual">Warm and casual</option>
+                    <option value="formal">Formal</option>
+                    <option value="short_and_direct">Short and direct</option>
+                  </select>
+                </label>
+
+                <label className="grid gap-1.5">
+                  <span className="text-sm text-slate-600">Signature</span>
+                  <textarea
+                    rows={3}
+                    maxLength={500}
+                    value={signature}
+                    onChange={(e) => setSignature(e.target.value)}
+                    placeholder={`Mike Rivera\n${businessName || 'Rivera Plumbing'}\n(512) 555-0142`}
+                  />
+                  <span className="text-xs text-slate-500">Leave empty to sign with your business name.</span>
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={savingReply}
+                  className="justify-self-start px-5 py-2.5 text-sm font-semibold rounded-xl shiny-btn text-white transition cursor-pointer disabled:opacity-50"
+                >
+                  {savingReply ? 'Saving…' : 'Save Reply Settings'}
+                </button>
+
+                {replyMessage && (
+                  <p role="alert" className={`text-sm ${replyMessage.startsWith('Failed') ? 'text-red-600' : 'text-green-600'}`}>
+                    {replyMessage}
                   </p>
                 )}
               </form>
@@ -308,7 +382,7 @@ export default function SettingsPage() {
                     type="tel"
                     value={newBizPhone}
                     onChange={(e) => setNewBizPhone(e.target.value)}
-                    placeholder="+1 555 1234"
+                    placeholder="(512) 555-0142"
                   />
                 </label>
 

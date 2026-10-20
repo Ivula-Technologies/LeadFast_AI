@@ -131,11 +131,10 @@ export default function ClientMarketplacePage() {
     <main
       style={{
         minHeight: '100vh',
-        backgroundImage: `linear-gradient(to bottom, rgba(248, 250, 252, 0.60), rgba(241, 245, 249, 0.72)), url('/images/client.jpg')`,
+        backgroundImage: `linear-gradient(to bottom, rgba(248, 250, 252, 0.60), rgba(241, 245, 249, 0.72)), url('/images/web/client.webp')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
       }}
     >
       <section className="container" style={{ padding: '24px 0 40px' }}>

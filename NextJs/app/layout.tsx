@@ -4,12 +4,16 @@ import "./globals.css";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 };
 
 export const metadata: Metadata = {
-  title: "LeadFast AI | HVAP Contractor Portal",
-  description: "AI-powered lead management and contractor portal for HVAP businesses.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://leadfast.ivulatechnologies.com"),
+  title: "LeadFast AI",
+  description: "Instant replies to every new lead for home service contractors.",
+  openGraph: {
+    siteName: "LeadFast AI",
+    images: [{ url: "/brand/leadfast-logo-1200.png", width: 1200, height: 359, alt: "LeadFast AI" }],
+  },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
