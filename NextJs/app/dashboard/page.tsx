@@ -15,7 +15,6 @@ interface Business {
   trade: string | null;
   contact_email: string | null;
   contact_phone: string | null;
-  plan: string | null;
 }
 
 interface Lead {
@@ -205,7 +204,6 @@ export default function ContractorDashboard() {
   // Derive a stable title string for the typewriter
   const dashboardTitle = business?.business_name || 'Contractor Dashboard';
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const [animatedTitle, titleDone] = useTypewriter(dashboardTitle, 60, 300);
 
   return (

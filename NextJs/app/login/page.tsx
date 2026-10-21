@@ -73,9 +73,6 @@ function LoginForm() {
   }
 
   async function finishSignIn(session: Session, user: User) {
-    window.localStorage.setItem('hvap-session', JSON.stringify(session));
-    window.localStorage.setItem('hvap-user', JSON.stringify(user));
-
     const bizRes = await fetch('/api/my-businesses', {
       headers: { Authorization: `Bearer ${session.access_token}` }
     });
