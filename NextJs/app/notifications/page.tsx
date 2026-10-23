@@ -107,6 +107,7 @@ export default function NotificationsPage() {
                 boxShadow: '0 0 15px rgba(168, 85, 247, 0.4)',
               }}
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/icon.svg" alt="LeadFast AI Logo" style={{ width: '26px', height: '26px' }} />
             </div>
             <span

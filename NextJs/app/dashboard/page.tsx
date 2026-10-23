@@ -15,7 +15,6 @@ interface Business {
   trade: string | null;
   contact_email: string | null;
   contact_phone: string | null;
-  plan: string | null;
 }
 
 interface Lead {
@@ -65,7 +64,6 @@ export default function ContractorDashboard() {
       if (typeof window === 'undefined') return;
 
       const storedBusiness = window.localStorage.getItem('hvap-business');
-      const onboardedFlag = window.localStorage.getItem('hvap-onboarded');
 
       const { data: sessionData } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
       if (!sessionData.session) {
@@ -84,10 +82,6 @@ export default function ContractorDashboard() {
 
       setBusiness(currentBiz);
 
-      // Auto open onboarding modal for first-time visitors
-      if (!onboardedFlag) {
-        setShowOnboarding(true);
-      }
 
       if (hasSupabaseConfig && supabase) {
         try {
@@ -210,7 +204,6 @@ export default function ContractorDashboard() {
   // Derive a stable title string for the typewriter
   const dashboardTitle = business?.business_name || 'Contractor Dashboard';
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const [animatedTitle, titleDone] = useTypewriter(dashboardTitle, 60, 300);
 
   return (
@@ -221,7 +214,6 @@ export default function ContractorDashboard() {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
       }}
     >
       <section className="max-w-7xl mx-auto space-y-6">
