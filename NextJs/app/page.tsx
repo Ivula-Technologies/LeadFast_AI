@@ -85,6 +85,7 @@ export default function LandingPage() {
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
             <a href="#how" className="hover:text-slate-900">How it works</a>
+            <Link href="/demo" className="hover:text-slate-900">Demo</Link>
             <a href="#pricing" className="hover:text-slate-900">Pricing</a>
             <a href="#faq" className="hover:text-slate-900">FAQ</a>
           </nav>
@@ -118,12 +119,12 @@ export default function LandingPage() {
                 <Link href={SIGNUP} className="shiny-btn !text-base">
                   Start your {TRIAL_DAYS}-day free trial
                 </Link>
-                <a
-                  href="#how"
+                <Link
+                  href="/demo"
                   className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-3 font-semibold text-slate-700 hover:bg-slate-50"
                 >
-                  See how it works
-                </a>
+                  Try the live demo
+                </Link>
               </div>
               <p className="text-sm text-slate-500">No credit card. Cancel any time. Set up in about 5 minutes.</p>
             </div>
