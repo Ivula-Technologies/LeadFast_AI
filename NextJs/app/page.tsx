@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PLANS, TRIAL_DAYS } from '@/lib/billing';
+import { BOOKING_URL } from '@/lib/booking';
 
 export const metadata: Metadata = {
   title: 'LeadFast AI: instant replies to every new lead, for contractors',
@@ -289,7 +290,12 @@ export default function LandingPage() {
             >
               Start your free trial
             </Link>
-            <p className="text-sm text-purple-200">No credit card needed.</p>
+            <p className="text-sm text-purple-200">
+              No credit card needed. Questions first?{' '}
+              <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-white underline">
+                Book a call with our founder
+              </a>
+            </p>
           </div>
         </section>
       </main>
@@ -330,6 +336,12 @@ export default function LandingPage() {
               Phone / WhatsApp:{' '}
               <a href="https://wa.me/254743761460" target="_blank" rel="noopener noreferrer" className="text-sky-700 font-medium">
                 +254 743 761 460
+              </a>
+            </p>
+            <p>
+              One-on-one call:{' '}
+              <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="text-sky-700 font-medium">
+                Book a Google Meet with Bius
               </a>
             </p>
             <p>Ivula Technologies, Emperor Plaza, 05 Koinange Street, Nairobi, Kenya</p>

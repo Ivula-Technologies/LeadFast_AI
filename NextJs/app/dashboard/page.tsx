@@ -8,6 +8,7 @@ import BillingPanel from '../components/BillingPanel';
 import InstallAppCard from '../components/InstallAppCard';
 import { supabaseAnon as supabase, hasSupabaseConfig } from '@/lib/supabase';
 import { authHeaders } from '@/lib/session';
+import { BOOKING_URL } from '@/lib/booking';
 import { LEAD_STATUSES, normalizeStatus, type LeadStatus } from '@/lib/pipeline';
 
 interface Business {
@@ -245,6 +246,14 @@ export default function ContractorDashboard() {
             >
               <span>🚀 Setup Walkthrough</span>
             </button>
+            <a
+              href={BOOKING_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-full bg-sky-50 text-sky-700 border border-sky-300 hover:bg-sky-100 transition-all"
+            >
+              📅 Book a help call
+            </a>
             <LogoutButton />
           </nav>
         </div>
