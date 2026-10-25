@@ -1,0 +1,52 @@
+{
+  "publicDir": "../NextJs/public",
+  "packageId": "com.ivulatechnologies.leadfast",
+  "host": "leadfast.ivulatechnologies.com",
+  "name": "LeadFast AI",
+  "launcherName": "LeadFast",
+  "display": "standalone",
+  "orientation": "portrait",
+  "themeColor": "#32036d",
+  "themeColorDark": "#32036d",
+  "navigationColor": "#32036d",
+  "navigationColorDark": "#32036d",
+  "navigationDividerColor": "#32036d",
+  "navigationDividerColorDark": "#32036d",
+  "backgroundColor": "#f8fafc",
+  "enableNotifications": false,
+  "startUrl": "/dashboard?app=android",
+  "iconUrl": "https://leadfast.ivulatechnologies.com/icon-512.png",
+  "maskableIconUrl": "https://leadfast.ivulatechnologies.com/icon-maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "upload.jks",
+    "alias": "upload"
+  },
+  "appVersionCode": 1,
+  "appVersion": "1.0.0",
+  "shortcuts": [
+    {
+      "name": "Leads",
+      "shortName": "Leads",
+      "url": "https://leadfast.ivulatechnologies.com/dashboard",
+      "chosenIconUrl": "https://leadfast.ivulatechnologies.com/icon-512.png"
+    },
+    {
+      "name": "Settings",
+      "shortName": "Settings",
+      "url": "https://leadfast.ivulatechnologies.com/settings",
+      "chosenIconUrl": "https://leadfast.ivulatechnologies.com/icon-512.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://leadfast.ivulatechnologies.com/",
+  "minSdkVersion": 21
+}

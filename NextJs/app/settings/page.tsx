@@ -404,7 +404,8 @@ export default function SettingsPage() {
             <div className="panel card p-5 sm:p-6 rounded-2xl bg-white border border-red-200 shadow-md">
               <h2 className="text-lg font-bold mb-1 text-red-600">Delete Business</h2>
               <p className="text-slate-500 text-sm mb-4">
-                This permanently deletes your business profile and all of its leads. This cannot be undone. If the business has a paid plan, cancel it under Manage billing on the dashboard first.
+                This permanently deletes your business profile and all of its leads. This cannot be undone.
+                <span data-hide-in-app> If the business has a paid plan, cancel it under Manage billing on the dashboard first.</span>
               </p>
 
               {!confirmOpen ? (
@@ -445,6 +446,10 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
+              <p className="mt-4 text-sm text-slate-500">
+                To delete your LeadFast login and everything with it,{' '}
+                <a href="/delete-account" className="font-semibold text-red-600 hover:underline">delete your account</a>.
+              </p>
             </div>
           </>
         )}

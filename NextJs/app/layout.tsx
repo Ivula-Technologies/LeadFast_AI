@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ServiceWorker from "./components/ServiceWorker";
+import { APP_PLATFORM_SCRIPT } from "@/lib/app-platform";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -38,7 +39,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    // The script marks the Google Play app before the first paint, so the
+    // attribute it adds to <html> is expected to differ from the server's.
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: APP_PLATFORM_SCRIPT }} />
+      </head>
       <body>
         {children}
         <ServiceWorker />
