@@ -9,6 +9,7 @@ export default function LogoutButton() {
   async function handleLogout() {
     if (typeof window === 'undefined') return;
     await supabaseAnon?.auth.signOut();
+    // Older versions kept copies of the session token here; clear them too.
     window.localStorage.removeItem('hvap-session');
     window.localStorage.removeItem('hvap-user');
     window.localStorage.removeItem('hvap-business');

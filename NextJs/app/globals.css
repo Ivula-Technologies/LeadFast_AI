@@ -77,7 +77,6 @@ h1::after, h2::after, h3::after, h4::after, h5::after, h6::after, .shiny-gold-he
 /* Utility: suppress the heading underline on specific elements */
 h1.no-underline::after, h2.no-underline::after, h3.no-underline::after { display: none !important; }
 
-
 @keyframes purpleTraverse {
   0% {
     background-position: 200% 0;
@@ -159,7 +158,6 @@ button:hover, .btn:hover { transform: translateY(-1px); }
 /* Portal Login button — always rectangular, never pill-shaped */
 a.shiny-green-btn { border-radius: 8px !important; text-decoration: none !important; }
 
-
 input, textarea, select { width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--border); background: #ffffff; color: var(--text); }
 input:focus, select:focus { outline: 2px solid rgba(2, 132, 199, 0.25); border-color: var(--accent-2); }
 
@@ -197,123 +195,15 @@ textarea:focus {
   display: inline-block;
 }
 
-/* About Section Responsive Grid & Cards */
-.about-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
-  align-items: stretch;
-}
-
-.about-card {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(203, 213, 225, 0.8);
-  border-radius: 18px;
-  height: 100%;
-  padding: 36px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.about-card-left {
-  background-image: url('/images/About.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  padding: 0 !important;
-}
-
-.about-card-content {
-  position: relative;
-  z-index: 1;
-  padding: 36px;
-}
-
-.trade-carousel-card {
-  min-height: 420px;
-}
-
-.trade-carousel-img {
-  width: 100%;
-  max-width: 70%;
-  height: 280px;
-  object-fit: contain;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.25);
-}
-
 @media (max-width: 920px) {
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
-
-  .about-grid {
-    grid-template-columns: 1fr !important;
-    gap: 24px !important;
-  }
-
-  .about-card {
-    padding: 28px 24px !important;
-    border-radius: 16px !important;
-  }
-
-  .about-card-content {
-    padding: 28px 24px !important;
-  }
-
-  .about-card-title {
-    font-size: 1.5rem !important;
-  }
-
-  .trade-carousel-img {
-    max-width: 85% !important;
-    height: 230px !important;
-  }
-
-  .trade-carousel-card {
-    min-height: auto !important;
-  }
 }
 
 @media (max-width: 640px) {
-  /* Hide text nav links on mobile, keep the login button */
-  .nav a:not(.shiny-green-btn) { display: none; }
-
   /* Make headings block so underline spans full width */
   h1, h2, h3, h4, h5, h6, .shiny-gold-heading {
     display: block;
   }
 
-  /* Ensure contractor card text wraps gracefully */
-  .contractor-card-text { font-size: 0.95rem !important; }
-
-  /* Tighten hero padding on mobile */
-  .hero-section { padding: 48px 0 36px !important; }
-
-  .about-grid {
-    gap: 20px !important;
-  }
-
-  .about-card {
-    padding: 22px 18px !important;
-  }
-
-  .about-card-content {
-    padding: 22px 18px !important;
-  }
-
-  .about-card-title {
-    font-size: 1.35rem !important;
-  }
-
-  .trade-carousel-card {
-    padding: 16px !important;
-  }
-
-  .trade-carousel-img {
-    max-width: 100% !important;
-    height: 200px !important;
-  }
 }
-
 

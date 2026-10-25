@@ -5,6 +5,7 @@ import { useTypewriter } from '../hooks/useTypewriter';
 import { useRouter } from 'next/navigation';
 import LogoutButton from '../components/LogoutButton';
 import BillingPanel from '../components/BillingPanel';
+import InstallAppCard from '../components/InstallAppCard';
 import { supabaseAnon as supabase, hasSupabaseConfig } from '@/lib/supabase';
 import { authHeaders } from '@/lib/session';
 import { LEAD_STATUSES, normalizeStatus, type LeadStatus } from '@/lib/pipeline';
@@ -15,7 +16,6 @@ interface Business {
   trade: string | null;
   contact_email: string | null;
   contact_phone: string | null;
-  plan: string | null;
 }
 
 interface Lead {
@@ -30,11 +30,11 @@ interface Lead {
 }
 
 const STATUS_STYLES: Record<LeadStatus, string> = {
-  New: 'bg-amber-100 text-amber-800 border-amber-300',
-  Contacted: 'bg-sky-100 text-sky-800 border-sky-300',
-  Booked: 'bg-indigo-100 text-indigo-800 border-indigo-300',
-  Won: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-  Lost: 'bg-slate-100 text-slate-600 border-slate-300',
+  New: '!bg-amber-100 text-amber-800 !border-amber-300',
+  Contacted: '!bg-sky-100 text-sky-800 !border-sky-300',
+  Booked: '!bg-indigo-100 text-indigo-800 !border-indigo-300',
+  Won: '!bg-emerald-100 text-emerald-800 !border-emerald-300',
+  Lost: '!bg-slate-100 text-slate-600 !border-slate-300',
 };
 
 const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -65,7 +65,6 @@ export default function ContractorDashboard() {
       if (typeof window === 'undefined') return;
 
       const storedBusiness = window.localStorage.getItem('hvap-business');
-      const onboardedFlag = window.localStorage.getItem('hvap-onboarded');
 
       const { data: sessionData } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
       if (!sessionData.session) {
@@ -84,10 +83,6 @@ export default function ContractorDashboard() {
 
       setBusiness(currentBiz);
 
-      // Auto open onboarding modal for first-time visitors
-      if (!onboardedFlag) {
-        setShowOnboarding(true);
-      }
 
       if (hasSupabaseConfig && supabase) {
         try {
@@ -210,7 +205,6 @@ export default function ContractorDashboard() {
   // Derive a stable title string for the typewriter
   const dashboardTitle = business?.business_name || 'Contractor Dashboard';
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const [animatedTitle, titleDone] = useTypewriter(dashboardTitle, 60, 300);
 
   return (
@@ -221,7 +215,6 @@ export default function ContractorDashboard() {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
       }}
     >
       <section className="max-w-7xl mx-auto space-y-6">
@@ -238,7 +231,7 @@ export default function ContractorDashboard() {
             </h1>
             <style>{`@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
           </div>
-          <nav className="flex items-center gap-3 flex-wrap w-full sm:w-auto justify-start sm:justify-end">
+          <nav className="flex items-center gap-2 sm:gap-3 flex-wrap w-full sm:w-auto justify-start sm:justify-end [&_button]:!px-3.5 [&_button]:!py-2 [&_button]:!text-xs sm:[&_button]:!text-sm">
             <a
               href="/settings"
               className="px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-full bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 transition-all"
@@ -257,22 +250,22 @@ export default function ContractorDashboard() {
         </div>
 
         {/* Business Summary KPI */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="panel card kpi p-5 rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50/50 border border-slate-200">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="panel card kpi p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50/50 border border-slate-200">
             <div className="label text-slate-600 text-xs sm:text-sm font-medium">Registered Trade</div>
             <div className="value text-lg sm:text-xl font-bold text-slate-900 mt-1 capitalize">
               {business?.trade || 'General Contracting'}
             </div>
           </div>
 
-          <div className="panel card kpi p-5 rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50/50 border border-slate-200">
+          <div className="panel card kpi p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50/50 border border-slate-200">
             <div className="label text-slate-600 text-xs sm:text-sm font-medium">Total Captured Leads</div>
             <div className="value text-2xl font-bold text-slate-900 mt-1">
               {loading ? '—' : leads.length}
             </div>
           </div>
 
-          <div className="panel card kpi p-5 rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50/50 border border-slate-200">
+          <div className="panel card kpi p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50/50 border border-slate-200">
             <div className="label text-slate-600 text-xs sm:text-sm font-medium">Booked or Won</div>
             <div className="value text-2xl font-bold text-slate-900 mt-1">
               {loading ? '—' : bookedOrWon}
@@ -284,7 +277,7 @@ export default function ContractorDashboard() {
             </div>
           </div>
 
-          <div className="panel card kpi p-5 rounded-2xl bg-gradient-to-br from-emerald-50 to-green-50/50 border border-slate-200">
+          <div className="panel card kpi p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-50 to-green-50/50 border border-slate-200">
             <div className="label text-slate-600 text-xs sm:text-sm font-medium">Won from LeadFast Leads</div>
             <div className="value text-2xl font-bold text-emerald-700 mt-1">
               {loading ? '—' : usd.format(wonRevenue)}
@@ -294,6 +287,8 @@ export default function ContractorDashboard() {
             </div>
           </div>
         </div>
+
+        <InstallAppCard />
 
         {business?.id && <BillingPanel businessId={business.id} />}
 
@@ -352,6 +347,125 @@ export default function ContractorDashboard() {
             </div>
           </div>
         )}
+
+        {/* Contractor's Private Leads View */}
+        <div className="panel card p-5 sm:p-6 rounded-2xl bg-white/95 border border-slate-200 shadow-lg space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold" style={{ color: '#0284c7' }}>My Incoming Leads</h2>
+              <p className="text-slate-600 text-xs sm:text-sm mt-0.5">Customer requests submitted for your services.</p>
+            </div>
+            {leads.length > 0 && (
+              <select
+                aria-label="Filter status"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full sm:w-auto px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-slate-800 text-xs sm:text-sm focus:outline-none focus:border-sky-500"
+              >
+                <option value="All">All statuses</option>
+                {LEAD_STATUSES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {leadError && <p className="text-sm text-red-600">{leadError}</p>}
+
+          {loading ? (
+            <p className="text-slate-600 text-sm py-4">Loading your leads...</p>
+          ) : visibleLeads.length === 0 ? (
+            <div className="p-8 sm:p-12 text-center border border-dashed border-slate-300 rounded-2xl bg-slate-50/60">
+              <p className="text-base sm:text-lg font-medium text-slate-700">
+                No leads captured yet.
+              </p>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1.5 max-w-md mx-auto">
+                Share your quote link or embed the script on your website, and new enquiries will appear here.
+              </p>
+              <button
+                type="button"
+                onClick={() => { setOnboardingStep(1); setShowOnboarding(true); }}
+                className="mt-4 px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-sky-50 text-sky-700 border border-sky-300 hover:bg-sky-100 transition cursor-pointer"
+              >
+                🚀 Launch Installation Guide
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:gap-4">
+              {visibleLeads.map((lead) => (
+                <div
+                  key={lead.id}
+                  className="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-slate-50/80 hover:border-slate-300 transition space-y-3"
+                >
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="min-w-0">
+                      <div className="font-bold text-base sm:text-lg text-slate-900">{lead.lead_name}</div>
+                      <div className="text-sky-700 text-xs sm:text-sm mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span>📧 {lead.lead_email || 'No email'}</span>
+                        {lead.lead_phone && <span>• 📞 {lead.lead_phone}</span>}
+                      </div>
+                    </div>
+                    <select
+                      aria-label={`Status for ${lead.lead_name}`}
+                      value={normalizeStatus(lead.status)}
+                      onChange={(e) => updateLead(lead.id, { status: e.target.value as LeadStatus })}
+                      className={`!w-auto !px-3 !py-1 !rounded-full text-xs font-semibold border cursor-pointer focus:outline-none ${STATUS_STYLES[normalizeStatus(lead.status)]}`}
+                    >
+                      {LEAD_STATUSES.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {normalizeStatus(lead.status) === 'Won' && (
+                    <label className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+                      <span className="font-medium">Job value</span>
+                      <span className="relative">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                        <input
+                          inputMode="decimal"
+                          placeholder="0"
+                          value={jobValues[lead.id] ?? (lead.job_value === null ? '' : String(Number(lead.job_value)))}
+                          onChange={(e) => setJobValues((v) => ({ ...v, [lead.id]: e.target.value }))}
+                          onBlur={() => saveJobValue(lead)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                          className="!w-32 !pl-6 !pr-2.5 !py-1.5 rounded-lg bg-white border border-slate-300 focus:outline-none focus:border-emerald-500"
+                        />
+                      </span>
+                    </label>
+                  )}
+
+                  {lead.message && (
+                    <div className="p-3 rounded-xl bg-white border border-slate-200">
+                      <p className="text-slate-700 text-xs sm:text-sm leading-relaxed">{lead.message}</p>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {lead.lead_phone && (
+                      <a href={`tel:${lead.lead_phone.replace(/[^\d+]/g, '')}`} className="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-500" style={{ color: '#fff' }}>
+                        📞 Call
+                      </a>
+                    )}
+                    {lead.lead_phone && (
+                      <a href={`sms:${lead.lead_phone.replace(/[^\d+]/g, '')}`} className="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">
+                        💬 Text
+                      </a>
+                    )}
+                    {lead.lead_email && (
+                      <a href={`mailto:${lead.lead_email}`} className="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">
+                        ✉️ Email
+                      </a>
+                    )}
+                    <span className="text-slate-500 text-xs ml-auto">
+                      {new Date(lead.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Embed Widget Code Snippet Section */}
         <div className="panel card p-5 sm:p-6 rounded-2xl bg-white/95 border border-slate-200 shadow-lg space-y-4">
@@ -417,108 +531,6 @@ export default function ContractorDashboard() {
             className="w-full font-mono text-xs sm:text-sm p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-sky-800 focus:outline-none resize-y overflow-x-auto"
             onClick={(e) => (e.target as HTMLTextAreaElement).select()}
           />
-        </div>
-
-        {/* Contractor's Private Leads View */}
-        <div className="panel card p-5 sm:p-6 rounded-2xl bg-white/95 border border-slate-200 shadow-lg space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <div>
-              <h2 className="text-lg sm:text-xl font-bold" style={{ color: '#0284c7' }}>My Incoming Leads</h2>
-              <p className="text-slate-600 text-xs sm:text-sm mt-0.5">Customer requests submitted for your services.</p>
-            </div>
-            {leads.length > 0 && (
-              <select
-                aria-label="Filter status"
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full sm:w-auto px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-slate-800 text-xs sm:text-sm focus:outline-none focus:border-sky-500"
-              >
-                <option value="All">All statuses</option>
-                {LEAD_STATUSES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            )}
-          </div>
-
-          {leadError && <p className="text-sm text-red-600">{leadError}</p>}
-
-          {loading ? (
-            <p className="text-slate-600 text-sm py-4">Loading your leads...</p>
-          ) : visibleLeads.length === 0 ? (
-            <div className="p-8 sm:p-12 text-center border border-dashed border-slate-300 rounded-2xl bg-slate-50/60">
-              <p className="text-base sm:text-lg font-medium text-slate-700">
-                No leads captured yet.
-              </p>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1.5 max-w-md mx-auto">
-                Share your quote link or embed the script on your website, and new enquiries will appear here.
-              </p>
-              <button
-                type="button"
-                onClick={() => { setOnboardingStep(1); setShowOnboarding(true); }}
-                className="mt-4 px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-sky-50 text-sky-700 border border-sky-300 hover:bg-sky-100 transition cursor-pointer"
-              >
-                🚀 Launch Installation Guide
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-3 sm:gap-4">
-              {visibleLeads.map((lead) => (
-                <div
-                  key={lead.id}
-                  className="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-slate-50/80 hover:border-slate-300 transition space-y-3"
-                >
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                    <div>
-                      <div className="font-bold text-base sm:text-lg text-slate-900">{lead.lead_name}</div>
-                      <div className="text-sky-700 text-xs sm:text-sm mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <span>📧 {lead.lead_email || 'No email'}</span>
-                        {lead.lead_phone && <span>• 📞 {lead.lead_phone}</span>}
-                      </div>
-                    </div>
-                    <select
-                      aria-label={`Status for ${lead.lead_name}`}
-                      value={normalizeStatus(lead.status)}
-                      onChange={(e) => updateLead(lead.id, { status: e.target.value as LeadStatus })}
-                      className={`px-3 py-1 rounded-full text-xs font-semibold border cursor-pointer focus:outline-none ${STATUS_STYLES[normalizeStatus(lead.status)]}`}
-                    >
-                      {LEAD_STATUSES.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {normalizeStatus(lead.status) === 'Won' && (
-                    <label className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
-                      <span className="font-medium">Job value</span>
-                      <span className="relative">
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500">$</span>
-                        <input
-                          inputMode="decimal"
-                          placeholder="0"
-                          value={jobValues[lead.id] ?? (lead.job_value === null ? '' : String(Number(lead.job_value)))}
-                          onChange={(e) => setJobValues((v) => ({ ...v, [lead.id]: e.target.value }))}
-                          onBlur={() => saveJobValue(lead)}
-                          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                          className="w-32 pl-6 pr-2.5 py-1.5 rounded-lg bg-white border border-slate-300 focus:outline-none focus:border-emerald-500"
-                        />
-                      </span>
-                    </label>
-                  )}
-
-                  {lead.message && (
-                    <div className="p-3 rounded-xl bg-white border border-slate-200">
-                      <p className="text-slate-700 text-xs sm:text-sm leading-relaxed">{lead.message}</p>
-                    </div>
-                  )}
-
-                  <div className="text-slate-500 text-xs">
-                    Received: {new Date(lead.created_at).toLocaleString()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
       </section>

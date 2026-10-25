@@ -5,8 +5,10 @@ LeadFast runs as a Node.js app (Next.js standalone server) under cPanel's **Setu
 ## 1. Supabase (once)
 
 1. Create a Supabase project.
-2. In the SQL editor, run these files from `Supabase/` in order: `schema.sql`, `rls.sql`, `billing.sql`, `pipeline.sql`. All four are safe to re-run.
+2. In the SQL editor, paste all of `Supabase/setup-all.sql` and click **Run**. It is `schema.sql`, `rls.sql`, `billing.sql` and `pipeline.sql` in order, and is safe to re-run.
 3. Auth > URL Configuration: set **Site URL** to `https://leadfast.ivulatechnologies.com` and add `https://leadfast.ivulatechnologies.com/login` to **Redirect URLs** (used by email confirmation and magic links).
+4. Project Settings > API: copy the **Project URL**, the **anon / publishable** key and the **service_role / secret** key. The first two go in `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (GitHub repository variables, because they are baked into the build, and cPanel); the secret key goes only in cPanel as `SUPABASE_SERVICE_ROLE_KEY`. Never put the secret key in GitHub or chat.
+5. Check: after deploying, `https://leadfast.ivulatechnologies.com/api/health` returns 200 once Supabase and the other settings are in place.
 
 ## 2. Resend (once)
 
