@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import ServiceWorker from "./components/ServiceWorker";
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#32036d",
 };
 
 export const metadata: Metadata = {
@@ -13,6 +15,11 @@ export const metadata: Metadata = {
   openGraph: {
     siteName: "LeadFast AI",
     images: [{ url: "/brand/leadfast-logo-1200.png", width: 1200, height: 359, alt: "LeadFast AI" }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: "LeadFast",
+    statusBarStyle: "default",
   },
   icons: {
     icon: [
@@ -32,7 +39,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <ServiceWorker />
+      </body>
     </html>
   );
 }
