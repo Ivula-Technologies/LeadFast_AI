@@ -54,6 +54,8 @@ cp -a public ../cpanel-package/public
 5. **Phone alerts (optional):** from `NextJs/`, run `node scripts/vapid-keys.mjs` once and add the three `VAPID_*` lines it prints as environment variables, then restart. Contractors then see "New lead alerts" on their dashboard. Keep the same keys from then on: new keys turn off every phone's alerts.
 6. **Cron Jobs** > add a daily job (e.g. 09:00) that emails trial businesses 3 days before and on the day their trial ends:
    `curl -fsS -H "Authorization: Bearer YOUR_CRON_SECRET" https://leadfast.ivulatechnologies.com/api/cron/trial-reminders > /dev/null`
+   Add a second job that runs **every hour** (minute 0). It reminds contractors, by phone alert and email, about any lead still marked New two hours after it arrived, once per lead:
+   `curl -fsS -H "Authorization: Bearer YOUR_CRON_SECRET" https://leadfast.ivulatechnologies.com/api/cron/lead-nudges > /dev/null`
 7. Add `https://leadfast.ivulatechnologies.com/api/health` to a free UptimeRobot HTTP monitor with email alerts. It returns 503 and the names of any missing settings when something isn't configured.
 
 ## 6. Smoke test

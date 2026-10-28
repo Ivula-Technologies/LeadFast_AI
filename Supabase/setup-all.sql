@@ -492,3 +492,8 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
 CREATE INDEX IF NOT EXISTS push_subscriptions_business_idx ON push_subscriptions (business_id);
 
 ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
+
+-- "Still waiting" reminders (/api/cron/lead-nudges): when a lead stays New for
+-- two hours, the contractor gets one nudge. nudged_at records that it was sent.
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS nudged_at TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS leads_waiting_idx ON leads (created_at) WHERE status = 'New' AND nudged_at IS NULL;
