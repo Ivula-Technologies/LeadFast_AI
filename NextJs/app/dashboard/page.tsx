@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import LogoutButton from '../components/LogoutButton';
 import BillingPanel from '../components/BillingPanel';
 import InstallAppCard from '../components/InstallAppCard';
+import LeadAlertsCard from '../components/LeadAlertsCard';
 import { supabaseAnon as supabase, hasSupabaseConfig } from '@/lib/supabase';
 import { authHeaders } from '@/lib/session';
 import { BOOKING_URL } from '@/lib/booking';
@@ -38,6 +39,15 @@ const STATUS_STYLES: Record<LeadStatus, string> = {
   Lost: '!bg-slate-100 text-slate-600 !border-slate-300',
 };
 
+// "Waiting 3h" on a New lead nobody has called yet; matches the hourly
+// /api/cron/lead-nudges reminder, which fires at two hours.
+function waitingLabel(lead: Lead, now: number): string | null {
+  if (normalizeStatus(lead.status) !== 'New') return null;
+  const hours = Math.floor((now - new Date(lead.created_at).getTime()) / 3_600_000);
+  if (hours < 1) return null;
+  return hours >= 24 ? `Waiting ${Math.floor(hours / 24)}d` : `Waiting ${hours}h`;
+}
+
 const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
 export default function ContractorDashboard() {
@@ -52,6 +62,7 @@ export default function ContractorDashboard() {
   const [testMessage, setTestMessage] = useState('');
   const [leadError, setLeadError] = useState('');
   const [jobValues, setJobValues] = useState<Record<string, string>>({});
+  const [now, setNow] = useState(() => Date.now());
   
   // Onboarding Modal State
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -60,6 +71,11 @@ export default function ContractorDashboard() {
   const [copiedModalSnippet, setCopiedModalSnippet] = useState(false);
 
   const router = useRouter();
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     async function loadContractorData() {
@@ -299,6 +315,8 @@ export default function ContractorDashboard() {
 
         <InstallAppCard />
 
+        {business?.id && <LeadAlertsCard businessId={business.id} />}
+
         {business?.id && <BillingPanel businessId={business.id} />}
 
         {/* Quote link + test lead: the fastest way to a first lead */}
@@ -466,7 +484,12 @@ export default function ContractorDashboard() {
                         ✉️ Email
                       </a>
                     )}
-                    <span className="text-slate-500 text-xs ml-auto">
+                    <span className="text-slate-500 text-xs ml-auto flex items-center gap-2">
+                      {waitingLabel(lead, now) && (
+                        <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 font-semibold">
+                          ⏰ {waitingLabel(lead, now)}
+                        </span>
+                      )}
                       {new Date(lead.created_at).toLocaleString()}
                     </span>
                   </div>
