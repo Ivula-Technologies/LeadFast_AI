@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import LogoutButton from '../components/LogoutButton';
 import BillingPanel from '../components/BillingPanel';
 import InstallAppCard from '../components/InstallAppCard';
+import LeadAlertsCard from '../components/LeadAlertsCard';
 import { supabaseAnon as supabase, hasSupabaseConfig } from '@/lib/supabase';
 import { authHeaders } from '@/lib/session';
 import { BOOKING_URL } from '@/lib/booking';
@@ -298,6 +299,8 @@ export default function ContractorDashboard() {
         </div>
 
         <InstallAppCard />
+
+        {business?.id && <LeadAlertsCard businessId={business.id} />}
 
         {business?.id && <BillingPanel businessId={business.id} />}
 

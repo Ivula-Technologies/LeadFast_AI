@@ -5,7 +5,7 @@ LeadFast runs as a Node.js app (Next.js standalone server) under cPanel's **Setu
 ## 1. Supabase (once)
 
 1. Create a Supabase project.
-2. In the SQL editor, paste all of `Supabase/setup-all.sql` and click **Run**. It is `schema.sql`, `rls.sql`, `billing.sql` and `pipeline.sql` in order, and is safe to re-run.
+2. In the SQL editor, paste all of `Supabase/setup-all.sql` and click **Run**. It is `schema.sql`, `rls.sql`, `billing.sql`, `pipeline.sql` and `push.sql` in order, and is safe to re-run. (Already set up? Run just `push.sql` to add phone alerts.)
 3. Auth > URL Configuration: set **Site URL** to `https://leadfast.ivulatechnologies.com` and add `https://leadfast.ivulatechnologies.com/login` to **Redirect URLs** (used by email confirmation and magic links).
 4. Project Settings > API: copy the **Project URL**, the **anon / publishable** key and the **service_role / secret** key. The first two go in `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (GitHub repository variables, because they are baked into the build, and cPanel); the secret key goes only in cPanel as `SUPABASE_SERVICE_ROLE_KEY`. Never put the secret key in GitHub or chat.
 5. Check: after deploying, `https://leadfast.ivulatechnologies.com/api/health` returns 200 once Supabase and the other settings are in place.
@@ -51,9 +51,10 @@ cp -a public ../cpanel-package/public
 2. **Setup Node.js App** > Create application: Node.js 20+, mode Production, application root `leadfast`, application URL `leadfast.ivulatechnologies.com`, startup file `server.js`.
 3. Add every variable from `NextJs/.env.example` under **Environment variables**, then restart the app.
 4. Make sure SSL (AutoSSL) is active on the subdomain.
-5. **Cron Jobs** > add a daily job (e.g. 09:00) that emails trial businesses 3 days before and on the day their trial ends:
+5. **Phone alerts (optional):** from `NextJs/`, run `node scripts/vapid-keys.mjs` once and add the three `VAPID_*` lines it prints as environment variables, then restart. Contractors then see "New lead alerts" on their dashboard. Keep the same keys from then on: new keys turn off every phone's alerts.
+6. **Cron Jobs** > add a daily job (e.g. 09:00) that emails trial businesses 3 days before and on the day their trial ends:
    `curl -fsS -H "Authorization: Bearer YOUR_CRON_SECRET" https://leadfast.ivulatechnologies.com/api/cron/trial-reminders > /dev/null`
-6. Add `https://leadfast.ivulatechnologies.com/api/health` to a free UptimeRobot HTTP monitor with email alerts. It returns 503 and the names of any missing settings when something isn't configured.
+7. Add `https://leadfast.ivulatechnologies.com/api/health` to a free UptimeRobot HTTP monitor with email alerts. It returns 503 and the names of any missing settings when something isn't configured.
 
 ## 6. Smoke test
 

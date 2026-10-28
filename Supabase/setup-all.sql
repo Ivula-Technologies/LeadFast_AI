@@ -2,7 +2,7 @@
 -- LeadFast AI: complete database setup (one paste)
 -- ============================================================
 -- Supabase > SQL Editor > New query > paste this whole file > Run.
--- It is schema.sql, rls.sql, billing.sql and pipeline.sql in order,
+-- It is schema.sql, rls.sql, billing.sql, pipeline.sql and push.sql in order,
 -- and is safe to run again on an existing project.
 -- Generated from those four files; edit them, not this one.
 
@@ -470,3 +470,25 @@ UPDATE leads SET status = 'Contacted' WHERE status = 'Follow-up';
 -- around the monthly reply cap; status changes go through PATCH /api/leads/[id].
 DROP POLICY IF EXISTS "Users can update their leads" ON leads;
 DROP POLICY IF EXISTS "Users can create leads" ON leads;
+
+-- ===================== push.sql =====================
+-- ============================================
+-- Phone alerts for new leads (run after pipeline.sql)
+-- ============================================
+-- One row per phone or browser that turned on "New lead alerts" in the app.
+-- Written and read only by the server (service role): the browser has no
+-- direct access, so RLS is on with no policies.
+
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    business_id UUID NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    endpoint TEXT NOT NULL UNIQUE,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS push_subscriptions_business_idx ON push_subscriptions (business_id);
+
+ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
