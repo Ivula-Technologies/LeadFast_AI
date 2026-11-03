@@ -27,6 +27,9 @@ function daysLeft(iso: string | null) {
   return Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000));
 }
 
+// Inside the Google Play app only the plain facts show (trial days, usage):
+// every plan button, price and nudge is marked data-hide-in-app, because Play
+// doesn't allow pointing people to payment outside it (lib/app-platform.ts).
 export default function BillingPanel({ businessId }: { businessId: string }) {
   const [entitlement, setEntitlement] = useState<Entitlement | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -96,12 +99,15 @@ export default function BillingPanel({ businessId }: { businessId: string }) {
           <p className="text-slate-600 text-xs sm:text-sm mt-1">
             {usage}.{' '}
             {warn && 'New leads are still saved and emailed to you, but customers are not getting an instant reply.'}
-            {entitlement.state === 'cap_reached' && subscribed && ' Upgrade to Pro under Manage billing for unlimited replies.'}
+            {entitlement.state === 'cap_reached' && subscribed && (
+              <span data-hide-in-app> Upgrade to Pro under Manage billing for unlimited replies.</span>
+            )}
           </p>
         </div>
         {subscribed && (
           <button
             type="button"
+            data-hide-in-app
             disabled={busy !== null}
             onClick={() => go('/api/billing/portal', {}, 'portal')}
             className="px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 transition cursor-pointer"
@@ -114,11 +120,12 @@ export default function BillingPanel({ businessId }: { businessId: string }) {
       {warn && missed > 0 && (
         <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs sm:text-sm text-amber-900">
           <strong>{missed} {missed === 1 ? 'customer' : 'customers'}</strong> contacted you this month without getting an instant reply.
-          Contractors who reply first usually win the job. {subscribed ? 'Upgrade to Pro' : 'Choose a plan'} to turn instant replies back on.
+          Contractors who reply first usually win the job.
+          <span data-hide-in-app> {subscribed ? 'Upgrade to Pro' : 'Choose a plan'} to turn instant replies back on.</span>
         </div>
       )}
 
-      <p className="text-xs sm:text-sm text-slate-600">
+      <p data-hide-in-app className="text-xs sm:text-sm text-slate-600">
         Questions about plans or setup?{' '}
         <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-sky-700 hover:underline">
           Book a free call with our founder
@@ -126,13 +133,13 @@ export default function BillingPanel({ businessId }: { businessId: string }) {
       </p>
 
       {trialEndingSoon && (
-        <div className="p-3.5 rounded-xl bg-sky-50 border border-sky-200 text-xs sm:text-sm text-sky-900">
+        <div data-hide-in-app className="p-3.5 rounded-xl bg-sky-50 border border-sky-200 text-xs sm:text-sm text-sky-900">
           Your trial ends soon. Pick a plan now and your instant replies keep running without a gap.
         </div>
       )}
 
       {!subscribed && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div data-hide-in-app className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {plans
             .filter((plan) => plan.key !== entitlement.plan)
             .map((plan) => (
