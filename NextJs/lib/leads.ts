@@ -2,6 +2,7 @@ import { after } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import Anthropic from "@anthropic-ai/sdk";
 import { Resend } from "resend";
+import { sendPushToBusiness } from "@/lib/push";
 import { supabase } from "@/lib/supabase";
 import { checkRateLimit, checkRateLimitKey } from "@/lib/rate-limit";
 import { getEntitlement } from "@/lib/billing";
@@ -341,11 +342,20 @@ async function notifyContractor(
     appUrl ? `\nOpen your dashboard: ${appUrl}/dashboard` : null,
   ].filter((line) => line !== null);
 
-  await sendEmail({
-    fromName: "LeadFast",
-    to: business.contact_email,
-    replyTo: lead.email || undefined,
-    subject: `New lead: ${lead.name}`,
-    text: lines.join("\n"),
-  });
+  const pushLine = lead.message ? lead.message.slice(0, 120) : lead.phone || lead.email || "";
+  await Promise.all([
+    sendPushToBusiness(business.id, {
+      title: `New lead: ${lead.name}`,
+      body: autoReplied ? `Instant reply sent. ${pushLine}` : pushLine || "Open LeadFast to follow up.",
+      url: "/dashboard",
+      tag: `lead-${lead.id}`,
+    }).catch((err) => console.error("Push alert failed:", err)),
+    sendEmail({
+      fromName: "LeadFast",
+      to: business.contact_email,
+      replyTo: lead.email || undefined,
+      subject: `New lead: ${lead.name}`,
+      text: lines.join("\n"),
+    }),
+  ]);
 }
