@@ -138,47 +138,9 @@ USING (
     )
 );
 
+-- Reply logs are written only by the server (service role); owners can only read them.
 DROP POLICY IF EXISTS "Users can create AI responses" ON ai_responses;
-CREATE POLICY "Users can create AI responses"
-ON ai_responses
-FOR INSERT
-TO authenticated
-WITH CHECK (
-    EXISTS (
-        SELECT 1
-        FROM leads
-        JOIN businesses
-        ON businesses.id = leads.business_id
-        WHERE leads.id = ai_responses.lead_id
-        AND businesses.owner_id = auth.uid()
-    )
-);
-
 DROP POLICY IF EXISTS "Users can update their AI responses" ON ai_responses;
-CREATE POLICY "Users can update their AI responses"
-ON ai_responses
-FOR UPDATE
-TO authenticated
-USING (
-    EXISTS (
-        SELECT 1
-        FROM leads
-        JOIN businesses
-        ON businesses.id = leads.business_id
-        WHERE leads.id = ai_responses.lead_id
-        AND businesses.owner_id = auth.uid()
-    )
-)
-WITH CHECK (
-    EXISTS (
-        SELECT 1
-        FROM leads
-        JOIN businesses
-        ON businesses.id = leads.business_id
-        WHERE leads.id = ai_responses.lead_id
-        AND businesses.owner_id = auth.uid()
-    )
-);
 
 DROP POLICY IF EXISTS "Users can delete their AI responses" ON ai_responses;
 CREATE POLICY "Users can delete their AI responses"

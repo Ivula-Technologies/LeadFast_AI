@@ -23,3 +23,8 @@ ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
 -- two hours, the contractor gets one nudge. nudged_at records that it was sent.
 ALTER TABLE leads ADD COLUMN IF NOT EXISTS nudged_at TIMESTAMPTZ;
 CREATE INDEX IF NOT EXISTS leads_waiting_idx ON leads (created_at) WHERE status = 'New' AND nudged_at IS NULL;
+
+-- Reply logs are written only by the server (service role). Owners keep the
+-- read policy; the insert/update policies from rls.sql are not needed.
+DROP POLICY IF EXISTS "Users can create AI responses" ON ai_responses;
+DROP POLICY IF EXISTS "Users can update their AI responses" ON ai_responses;
