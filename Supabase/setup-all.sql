@@ -208,47 +208,9 @@ USING (
     )
 );
 
+-- Reply logs are written only by the server (service role); owners can only read them.
 DROP POLICY IF EXISTS "Users can create AI responses" ON ai_responses;
-CREATE POLICY "Users can create AI responses"
-ON ai_responses
-FOR INSERT
-TO authenticated
-WITH CHECK (
-    EXISTS (
-        SELECT 1
-        FROM leads
-        JOIN businesses
-        ON businesses.id = leads.business_id
-        WHERE leads.id = ai_responses.lead_id
-        AND businesses.owner_id = auth.uid()
-    )
-);
-
 DROP POLICY IF EXISTS "Users can update their AI responses" ON ai_responses;
-CREATE POLICY "Users can update their AI responses"
-ON ai_responses
-FOR UPDATE
-TO authenticated
-USING (
-    EXISTS (
-        SELECT 1
-        FROM leads
-        JOIN businesses
-        ON businesses.id = leads.business_id
-        WHERE leads.id = ai_responses.lead_id
-        AND businesses.owner_id = auth.uid()
-    )
-)
-WITH CHECK (
-    EXISTS (
-        SELECT 1
-        FROM leads
-        JOIN businesses
-        ON businesses.id = leads.business_id
-        WHERE leads.id = ai_responses.lead_id
-        AND businesses.owner_id = auth.uid()
-    )
-);
 
 DROP POLICY IF EXISTS "Users can delete their AI responses" ON ai_responses;
 CREATE POLICY "Users can delete their AI responses"
@@ -497,3 +459,8 @@ ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
 -- two hours, the contractor gets one nudge. nudged_at records that it was sent.
 ALTER TABLE leads ADD COLUMN IF NOT EXISTS nudged_at TIMESTAMPTZ;
 CREATE INDEX IF NOT EXISTS leads_waiting_idx ON leads (created_at) WHERE status = 'New' AND nudged_at IS NULL;
+
+-- Reply logs are written only by the server (service role). Owners keep the
+-- read policy; the insert/update policies from rls.sql are not needed.
+DROP POLICY IF EXISTS "Users can create AI responses" ON ai_responses;
+DROP POLICY IF EXISTS "Users can update their AI responses" ON ai_responses;
