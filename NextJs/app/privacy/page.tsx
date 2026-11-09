@@ -38,8 +38,9 @@ export default function PrivacyPage() {
 
       <h2 className="no-underline">How long we keep it</h2>
       <p>
-        For as long as your account is open. When you delete a business, its leads and replies are deleted with it. Ask us
-        to close your account and we will delete your data within 30 days, apart from billing records we must keep by law.
+        For as long as your account is open. When you delete a business, its leads and replies are deleted with it. To close
+        your account, follow <a href="/delete-account" className="text-sky-700 underline">Delete your account</a> and we
+        will delete your data within 30 days, apart from billing records we must keep by law.
       </p>
 
       <h2 className="no-underline">Your choices and rights</h2>
