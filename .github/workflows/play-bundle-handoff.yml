@@ -2,7 +2,7 @@ name: Play bundle hand-off (temporary)
 
 # Temporary: builds the Google Play app bundle once (unsigned, version code 1) and stores it at the
 # git ref refs/android-builds/play so it can be signed with the upload key outside GitHub.
-# Removed again in the next commit on this branch.
+# Removed again in the next commit on this branch. Notifications on: new-lead/book alerts arrive as app notifications.
 on:
   push:
     paths:
@@ -44,4 +44,4 @@ jobs:
           blob=$(git hash-object -w "$aab")
           tree=$(printf '100644 blob %s\tapp-release-unsigned.aab\n' "$blob" | git mktree)
           commit=$(git commit-tree "$tree" -m "Unsigned Play bundle from ${GITHUB_SHA}")
-          git push -f origin "$commit:refs/android-builds/play"
+          git push -f origin "$commit:refs/android-builds/play-${GITHUB_SHA}"

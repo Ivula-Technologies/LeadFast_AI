@@ -13,7 +13,7 @@
   "navigationDividerColor": "#32036d",
   "navigationDividerColorDark": "#32036d",
   "backgroundColor": "#f8fafc",
-  "enableNotifications": false,
+  "enableNotifications": true,
   "startUrl": "/dashboard?app=android",
   "iconUrl": "https://leadfast.ivulatechnologies.com/icon-512.png",
   "maskableIconUrl": "https://leadfast.ivulatechnologies.com/icon-maskable-512.png",
