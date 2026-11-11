@@ -63,6 +63,10 @@ export default function ContractorDashboard() {
   const [leadError, setLeadError] = useState('');
   const [jobValues, setJobValues] = useState<Record<string, string>>({});
   const [now, setNow] = useState(() => Date.now());
+  const [needsBusiness, setNeedsBusiness] = useState(false);
+  const [setup, setSetup] = useState({ business_name: '', trade: '', contact_phone: '' });
+  const [setupState, setSetupState] = useState<'idle' | 'saving'>('idle');
+  const [setupError, setSetupError] = useState('');
   
   // Onboarding Modal State
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -98,6 +102,24 @@ export default function ContractorDashboard() {
         }
       }
 
+      // The stored copy is only a hint (it may be another account's, or miss
+      // the name and trade); the server's list of this user's businesses wins.
+      try {
+        const res = await fetch('/api/my-businesses', {
+          headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
+        });
+        if (res.ok) {
+          const list = (await res.json()) as Business[];
+          const match = list.find((b) => b.id === currentBiz?.id) ?? list[0] ?? null;
+          currentBiz = match;
+          if (match) window.localStorage.setItem('hvap-business', JSON.stringify({ ...match, name: match.business_name }));
+          else window.localStorage.removeItem('hvap-business');
+          setNeedsBusiness(!match);
+        }
+      } catch (err) {
+        console.error('Could not load businesses:', err);
+      }
+
       setBusiness(currentBiz);
 
 
@@ -128,6 +150,35 @@ export default function ContractorDashboard() {
 
     loadContractorData();
   }, [router]);
+
+  async function createBusiness(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSetupState('saving');
+    setSetupError('');
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
+        body: JSON.stringify(setup),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || 'Could not create your business.');
+      const created: Business = {
+        id: data.id,
+        business_name: data.business_name,
+        trade: setup.trade.trim() || null,
+        contact_email: null,
+        contact_phone: setup.contact_phone.trim() || null,
+      };
+      window.localStorage.setItem('hvap-business', JSON.stringify({ ...created, name: created.business_name }));
+      setBusiness(created);
+      setNeedsBusiness(false);
+    } catch (err) {
+      setSetupError(err instanceof Error ? err.message : 'Could not create your business.');
+    } finally {
+      setSetupState('idle');
+    }
+  }
 
   function closeOnboarding() {
     setShowOnboarding(false);
@@ -312,6 +363,50 @@ export default function ContractorDashboard() {
             </div>
           </div>
         </div>
+
+        {needsBusiness && (
+          <form
+            onSubmit={createBusiness}
+            className="panel card p-5 sm:p-6 rounded-2xl bg-white/95 border border-amber-300 shadow-lg space-y-3"
+          >
+            <div>
+              <h2 className="no-underline text-lg sm:text-xl font-bold text-slate-900">Set up your business</h2>
+              <p className="text-slate-600 text-xs sm:text-sm mt-1">
+                Your account has no business yet. Add it to get your quote link, start your 14-day free trial and receive leads.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <input
+                required
+                aria-label="Business name"
+                placeholder="Business name"
+                value={setup.business_name}
+                onChange={(e) => setSetup((v) => ({ ...v, business_name: e.target.value }))}
+              />
+              <input
+                aria-label="Trade"
+                placeholder="Trade, e.g. roofing"
+                value={setup.trade}
+                onChange={(e) => setSetup((v) => ({ ...v, trade: e.target.value }))}
+              />
+              <input
+                aria-label="Business phone"
+                type="tel"
+                placeholder="Business phone (optional)"
+                value={setup.contact_phone}
+                onChange={(e) => setSetup((v) => ({ ...v, contact_phone: e.target.value }))}
+              />
+            </div>
+            {setupError && <p className="text-sm text-red-600">{setupError}</p>}
+            <button
+              type="submit"
+              disabled={setupState === 'saving'}
+              className="px-4 py-2 text-sm font-semibold rounded-xl text-white shiny-btn disabled:opacity-50 cursor-pointer"
+            >
+              {setupState === 'saving' ? 'Creating…' : 'Create my business'}
+            </button>
+          </form>
+        )}
 
         <InstallAppCard />
 
