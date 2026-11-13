@@ -36,10 +36,23 @@ export default function BillingPanel({ businessId }: { businessId: string }) {
   const [missed, setMissed] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    // Back from Stripe Checkout: the webhook that switches the plan on can
+    // land a few seconds after the redirect, so keep checking for a while.
+    const params = new URLSearchParams(window.location.search);
+    const result = params.get('billing');
+    if (result) {
+      params.delete('billing');
+      const query = params.toString();
+      window.history.replaceState(null, '', window.location.pathname + (query ? `?${query}` : ''));
+    }
+    let checksLeft = result === 'success' ? 10 : 0;
+
+    async function load() {
       const res = await fetch(`/api/billing/status?business_id=${encodeURIComponent(businessId)}`, {
         headers: await authHeaders(),
       });
@@ -49,10 +62,27 @@ export default function BillingPanel({ businessId }: { businessId: string }) {
       setEntitlement(data.entitlement);
       setPlans(data.plans);
       setMissed(data.missedThisMonth ?? 0);
-    })().catch(() => {
+      if (result === 'cancelled') setNotice('Checkout was cancelled. You have not been charged.');
+      const live = data.entitlement?.subscriptionStatus && ['active', 'trialing', 'past_due'].includes(data.entitlement.subscriptionStatus);
+      if (checksLeft > 0) {
+        if (live) {
+          setNotice('Thanks! Your plan is active.');
+        } else if (--checksLeft > 0) {
+          setNotice('Payment received. Switching your plan on…');
+          timer = setTimeout(() => load().catch(() => {}), 3000);
+        } else {
+          setNotice('Payment received. Your plan can take a minute to show here; refresh the page shortly.');
+        }
+      }
+    }
+
+    load().catch(() => {
       if (!cancelled) setError('Could not load billing status.');
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
   }, [businessId]);
 
   async function go(path: string, body: Record<string, string>, key: string) {
@@ -134,14 +164,13 @@ export default function BillingPanel({ businessId }: { businessId: string }) {
 
       {trialEndingSoon && (
         <div data-hide-in-app className="p-3.5 rounded-xl bg-sky-50 border border-sky-200 text-xs sm:text-sm text-sky-900">
-          Your trial ends soon. Pick a plan now and your instant replies keep running without a gap.
+          Your trial ends soon. Pick a plan now and your instant replies keep running without a gap. You won&apos;t be charged until the trial ends.
         </div>
       )}
 
       {!subscribed && (
         <div data-hide-in-app className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {plans
-            .filter((plan) => plan.key !== entitlement.plan)
             .map((plan) => (
               <div key={plan.key} className="rounded-xl border border-slate-200 p-4 bg-slate-50 flex flex-col gap-2">
                 <div className="flex items-baseline justify-between">
@@ -164,6 +193,7 @@ export default function BillingPanel({ businessId }: { businessId: string }) {
         </div>
       )}
 
+      {notice && <p className="text-sm text-emerald-700">{notice}</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );

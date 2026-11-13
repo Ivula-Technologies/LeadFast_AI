@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { getOwnedBusiness, getRequestUser, unauthorized } from "@/lib/auth";
-import { PLANS, appUrl, isPlanKey, stripe } from "@/lib/billing";
+import { PLANS, TRIAL_DAYS, appUrl, isPlanKey, stripe } from "@/lib/billing";
 
 // POST /api/billing/checkout { business_id, plan } -> { url } of a Stripe Checkout page.
 export async function POST(request: Request) {
@@ -57,6 +57,21 @@ export async function POST(request: Request) {
       .upsert({ business_id: business.id, stripe_customer_id: customerId, updated_at: new Date().toISOString() });
   }
 
+  // Subscribing during the free trial keeps the trial days: Stripe takes the
+  // card now and charges on the day the trial would have ended. Checkout only
+  // accepts a trial end at least 48 hours out, so the last two days charge now.
+  const { data: created } = await supabase
+    .from("businesses")
+    .select("created_at")
+    .eq("id", business.id)
+    .maybeSingle();
+  const trialEnd = created?.created_at
+    ? Math.floor((new Date(created.created_at).getTime() + TRIAL_DAYS * 86_400_000) / 1000)
+    : 0;
+  const keepTrial = trialEnd > Math.floor(Date.now() / 1000) + 49 * 3600;
+  // One trial per business: a business that already had a subscription pays now.
+  const firstSubscription = !billing?.subscription_status;
+
   const base = appUrl(request);
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
@@ -64,7 +79,10 @@ export async function POST(request: Request) {
     client_reference_id: business.id,
     line_items: [{ price: priceId, quantity: 1 }],
     allow_promotion_codes: true,
-    subscription_data: { metadata: { business_id: business.id, plan } },
+    subscription_data: {
+      metadata: { business_id: business.id, plan },
+      ...(keepTrial && firstSubscription ? { trial_end: trialEnd } : {}),
+    },
     metadata: { business_id: business.id, plan },
     success_url: `${base}/dashboard?billing=success`,
     cancel_url: `${base}/dashboard?billing=cancelled`,
